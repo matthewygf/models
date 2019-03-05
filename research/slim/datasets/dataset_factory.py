@@ -23,15 +23,18 @@ from datasets import flowers
 from datasets import imagenet
 from datasets import mnist
 
+# NEED TO FIXED THESE DATASET LOADING
 datasets_map = {
-    'cifar10': cifar10,
     'flowers': flowers,
     'imagenet': imagenet,
     'mnist': mnist,
 }
 
+datasets_map_modified = {
+    'cifar10': cifar10,
+}
 
-def get_dataset(name, split_name, dataset_dir, file_pattern=None, reader=None):
+def get_dataset(name, split_name, dataset_dir, file_pattern=None, cycle_length=2):
   """Given a dataset name and a split_name returns a Dataset.
 
   Args:
@@ -43,15 +46,16 @@ def get_dataset(name, split_name, dataset_dir, file_pattern=None, reader=None):
       reader defined by each dataset is used.
 
   Returns:
-    A `Dataset` class.
+    A tf.data.Dataset
 
   Raises:
     ValueError: If the dataset `name` is unknown.
   """
-  if name not in datasets_map:
+  if name not in datasets_map_modified:
     raise ValueError('Name of dataset unknown %s' % name)
-  return datasets_map[name].get_split(
+  
+  return datasets_map_modified[name].get_split(
       split_name,
       dataset_dir,
       file_pattern,
-      reader)
+      cycle_length)

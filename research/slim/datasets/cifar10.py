@@ -27,8 +27,6 @@ import tensorflow as tf
 
 from datasets import dataset_utils
 
-slim = tf.contrib.slim
-
 _FILE_PATTERN = 'cifar10_%s.tfrecord'
 
 SPLITS_TO_SIZES = {'train': 50000, 'test': 10000}
@@ -40,8 +38,20 @@ _ITEMS_TO_DESCRIPTIONS = {
     'label': 'A single integer between 0 and 9',
 }
 
+def parse_fn(data):
+  keys_to_features = {
+      'image/encoded': tf.FixedLenFeature((), tf.string, default_value=''),
+      'image/format': tf.FixedLenFeature((), tf.string, default_value='png'),
+      'image/class/label': tf.FixedLenFeature(
+          [], tf.int64, default_value=tf.zeros([], dtype=tf.int64)),
+  }
 
-def get_split(split_name, dataset_dir, file_pattern=None, reader=None):
+  parsed = tf.parse_single_example(data, keys_to_features)
+  image = tf.io.decode_image(parsed["image/encoded"], channels=3)
+  label = parsed["image/class/label"] 
+  return image, label
+
+def get_split(split_name, dataset_dir, file_pattern=None, cycle_length=2):
   """Gets a dataset tuple with instructions for reading cifar10.
 
   Args:
@@ -53,7 +63,7 @@ def get_split(split_name, dataset_dir, file_pattern=None, reader=None):
     reader: The TensorFlow reader type.
 
   Returns:
-    A `Dataset` namedtuple.
+    dataset - of type tf.data.Dataset
 
   Raises:
     ValueError: if `split_name` is not a valid train/test split.
@@ -64,35 +74,20 @@ def get_split(split_name, dataset_dir, file_pattern=None, reader=None):
   if not file_pattern:
     file_pattern = _FILE_PATTERN
   file_pattern = os.path.join(dataset_dir, file_pattern % split_name)
+  
+  assert tf.gfile.Exists(file_pattern)
+  print("file exists -- continue getting data")
 
-  # Allowing None in the signature so that dataset_factory can use the default.
-  if not reader:
-    reader = tf.TFRecordReader
-
-  keys_to_features = {
-      'image/encoded': tf.FixedLenFeature((), tf.string, default_value=''),
-      'image/format': tf.FixedLenFeature((), tf.string, default_value='png'),
-      'image/class/label': tf.FixedLenFeature(
-          [], tf.int64, default_value=tf.zeros([], dtype=tf.int64)),
-  }
-
-  items_to_handlers = {
-      'image': slim.tfexample_decoder.Image(shape=[32, 32, 3]),
-      'label': slim.tfexample_decoder.Tensor('image/class/label'),
-  }
-
-  decoder = slim.tfexample_decoder.TFExampleDecoder(
-      keys_to_features, items_to_handlers)
-
-  labels_to_names = None
   if dataset_utils.has_labels(dataset_dir):
     labels_to_names = dataset_utils.read_label_file(dataset_dir)
+  print(labels_to_names)
 
-  return slim.dataset.Dataset(
-      data_sources=file_pattern,
-      reader=reader,
-      decoder=decoder,
-      num_samples=SPLITS_TO_SIZES[split_name],
-      items_to_descriptions=_ITEMS_TO_DESCRIPTIONS,
-      num_classes=_NUM_CLASSES,
-      labels_to_names=labels_to_names)
+  # declare dataset
+  files = tf.data.Dataset.list_files([file_pattern])
+  train_dataset = files.apply(tf.data.experimental.parallel_interleave(
+      tf.data.TFRecordDataset, cycle_length=cycle_length
+    )
+  )
+  train_dataset = train_dataset.map(map_func=parse_fn, num_parallel_calls=cycle_length)
+  return train_dataset, _NUM_CLASSES, SPLITS_TO_SIZES[split_name]
+

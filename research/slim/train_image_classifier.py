@@ -203,7 +203,7 @@ tf.app.flags.DEFINE_integer(
 tf.app.flags.DEFINE_integer(
     'train_image_size', None, 'Train image size')
 
-tf.app.flags.DEFINE_integer('max_number_of_steps', None,
+tf.app.flags.DEFINE_integer('max_number_of_steps', 99999,
                             'The maximum number of training steps.')
 
 #####################
@@ -410,20 +410,20 @@ def main(_):
 
     # Create global_step
     with tf.device(deploy_config.variables_device()):
-      global_step = slim.create_global_step()
+      global_step = tf.train.create_global_step()
 
     ######################
     # Select the dataset #
     ######################
-    dataset = dataset_factory.get_dataset(
+    dataset, num_classes, num_samples = dataset_factory.get_dataset(
         FLAGS.dataset_name, FLAGS.dataset_split_name, FLAGS.dataset_dir)
-
+    
     ######################
     # Select the network #
     ######################
     network_fn = nets_factory.get_network_fn(
         FLAGS.model_name,
-        num_classes=(dataset.num_classes - FLAGS.labels_offset),
+        num_classes=(num_classes - FLAGS.labels_offset),
         weight_decay=FLAGS.weight_decay,
         is_training=True)
 
@@ -434,39 +434,36 @@ def main(_):
     image_preprocessing_fn = preprocessing_factory.get_preprocessing(
         preprocessing_name,
         is_training=True)
-
+    
     ##############################################################
     # Create a dataset provider that loads data from the dataset #
     ##############################################################
-    with tf.device(deploy_config.inputs_device()):
-      provider = slim.dataset_data_provider.DatasetDataProvider(
-          dataset,
-          num_readers=FLAGS.num_readers,
-          common_queue_capacity=20 * FLAGS.batch_size,
-          common_queue_min=10 * FLAGS.batch_size)
-      [image, label] = provider.get(['image', 'label'])
+    def image_preprocessing_dataset_fn(image, label):
       label -= FLAGS.labels_offset
-
       train_image_size = FLAGS.train_image_size or network_fn.default_image_size
-
       image = image_preprocessing_fn(image, train_image_size, train_image_size)
+      return image, label
 
-      images, labels = tf.train.batch(
-          [image, label],
-          batch_size=FLAGS.batch_size,
-          num_threads=FLAGS.num_preprocessing_threads,
-          capacity=5 * FLAGS.batch_size)
-      labels = slim.one_hot_encoding(
-          labels, dataset.num_classes - FLAGS.labels_offset)
-      batch_queue = slim.prefetch_queue.prefetch_queue(
-          [images, labels], capacity=2 * deploy_config.num_clones)
+    with tf.device(deploy_config.inputs_device()):
+      # some more preprocessing
+      dataset = dataset.map(map_func=image_preprocessing_dataset_fn)
+      dataset = dataset.batch(FLAGS.batch_size)
+      dataset = dataset.prefetch(FLAGS.batch_size)
+      
+    iterator = tf.data.Iterator.from_structure(
+      dataset.output_types, dataset.output_shapes
+    )
+
+    train_init_op = iterator.make_initializer(dataset) 
 
     ####################
     # Define the model #
     ####################
-    def clone_fn(batch_queue):
-      """Allows data parallelism by creating multiple clones of network_fn."""
-      images, labels = batch_queue.dequeue()
+    
+    def clone_fn(batch_data):
+
+      images, labels = batch_data
+      labels = tf.one_hot(labels, num_classes)
       logits, end_points = network_fn(images)
 
       #############################
@@ -484,7 +481,7 @@ def main(_):
     # Gather initial summaries.
     summaries = set(tf.get_collection(tf.GraphKeys.SUMMARIES))
 
-    clones = model_deploy.create_clones(deploy_config, clone_fn, [batch_queue])
+    clones = model_deploy.create_clones(deploy_config, clone_fn, [iterator.get_next()])
     first_clone_scope = deploy_config.clone_scope(0)
     # Gather update_ops from the first clone. These contain, for example,
     # the updates for the batch_norm variables created by network_fn.
@@ -524,7 +521,7 @@ def main(_):
     # Configure the optimization procedure. #
     #########################################
     with tf.device(deploy_config.optimizer_device()):
-      learning_rate = _configure_learning_rate(dataset.num_samples, global_step)
+      learning_rate = _configure_learning_rate(num_samples, global_step)
       optimizer = _configure_optimizer(learning_rate)
       summaries.add(tf.summary.scalar('learning_rate', learning_rate))
 
