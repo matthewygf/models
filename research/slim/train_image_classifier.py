@@ -466,6 +466,7 @@ def main(_):
     def clone_fn(iterator):
 
       images, labels = iterator.get_next()
+      
       logits, end_points = network_fn(images)
 
       #############################
