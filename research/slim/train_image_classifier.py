@@ -410,6 +410,7 @@ def main(_):
 
     # Create global_step
     with tf.device(deploy_config.variables_device()):
+      tf.compat.v1.logging.info("Device holding the variables is %s: " % deploy_config.variables_device())
       global_step = tf.train.create_global_step()
 
     ######################
@@ -529,6 +530,7 @@ def main(_):
     # Configure the optimization procedure. #
     #########################################
     with tf.device(deploy_config.optimizer_device()):
+      tf.compat.v1.logging.info("Optimizing on the optimizer device %s :" % deploy_config.optimizer_device())
       learning_rate = _configure_learning_rate(num_samples, global_step)
       optimizer = _configure_optimizer(learning_rate)
       summaries.add(tf.summary.scalar('learning_rate', learning_rate))
