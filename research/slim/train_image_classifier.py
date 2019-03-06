@@ -479,12 +479,10 @@ def main(_):
           end_points['AuxLogits'],
           label_smoothing=FLAGS.label_smoothing,
           weights=0.4,
-          scope='aux_loss',
-          reduction=Reduction.SUM_OVER_BATCH_SIZE
+          scope='aux_loss'
         )
       tf.losses.softmax_cross_entropy(
-        labels, logits, label_smoothing=FLAGS.label_smoothing, weights=1.0,
-        reduction=Reduction.SUM_OVER_BATCH_SIZE
+        labels, logits, label_smoothing=FLAGS.label_smoothing, weights=1.0
       )
       return end_points
 
