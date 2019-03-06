@@ -472,12 +472,19 @@ def main(_):
       # Specify the loss function #
       #############################
       if 'AuxLogits' in end_points:
-        slim.losses.softmax_cross_entropy(
-            end_points['AuxLogits'], labels,
-            label_smoothing=FLAGS.label_smoothing, weights=0.4,
-            scope='aux_loss')
-      slim.losses.softmax_cross_entropy(
-          logits, labels, label_smoothing=FLAGS.label_smoothing, weights=1.0)
+        # apparently labels can have gradients in the new softmax_cross_entropy
+        tf.losses.softmax_cross_entropy(
+          labels,
+          end_points['AuxLogits'],
+          label_smoothing=FLAGS.label_smoothing,
+          weights=0.4,
+          scope='aux_loss',
+          reduction=Reduction.SUM_OVER_BATCH_SIZE
+        )
+      tf.losses.softmax_cross_entropy(
+        labels, logits, label_smoothing=FLAGS.label_smoothing, weights=1.0,
+        reduction=Reduction.SUM_OVER_BATCH_SIZE
+      )
       return end_points
 
     # Gather initial summaries.
@@ -569,7 +576,9 @@ def main(_):
     summary_op = tf.summary.merge(list(summaries), name='summary_op')
 
     global_init_op = tf.initializers.global_variables()
-    init_train_op = tf.group(init_iterator_op, global_init_op)
+    local_init_op = tf.compat.v1.local_variables_initializer()
+    table_init_op = tf.initializers.tables_initializer(name='init_all_tables')
+    init_train_op = tf.group(init_iterator_op, global_init_op, local_init_op, table_init_op)
 
     ###########################
     # Kicks off the training. #
@@ -580,7 +589,7 @@ def main(_):
         master=FLAGS.master,
         is_chief=(FLAGS.task == 0),
         init_fn=_get_init_fn(),
-        init_op=init_train_op,
+        local_init_op=init_train_op,
         summary_op=summary_op,
         number_of_steps=FLAGS.max_number_of_steps,
         log_every_n_steps=FLAGS.log_every_n_steps,
