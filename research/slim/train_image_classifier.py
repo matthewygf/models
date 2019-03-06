@@ -440,6 +440,7 @@ def main(_):
     ##############################################################
     def image_preprocessing_dataset_fn(image, label):
       label -= FLAGS.labels_offset
+      label = tf.one_hot(label, num_classes)
       train_image_size = FLAGS.train_image_size or network_fn.default_image_size
       image = image_preprocessing_fn(image, train_image_size, train_image_size)
       return image, label
@@ -447,23 +448,24 @@ def main(_):
     with tf.device(deploy_config.inputs_device()):
       # some more preprocessing
       dataset = dataset.map(map_func=image_preprocessing_dataset_fn)
+      dataset = dataset.shuffle(buffer_size=FLAGS.batch_size*2)
       dataset = dataset.batch(FLAGS.batch_size)
-      dataset = dataset.prefetch(FLAGS.batch_size)
+      # apparently distributionStrategies will adjust how many batches to fetch
+      dataset = dataset.prefetch(buffer_size=tf.data.experimental.AUTOTUNE)
       
     iterator = tf.data.Iterator.from_structure(
       dataset.output_types, dataset.output_shapes
     )
 
-    train_init_op = iterator.make_initializer(dataset) 
+    init_iterator_op = iterator.make_initializer(dataset) 
 
     ####################
     # Define the model #
     ####################
     
-    def clone_fn(batch_data):
+    def clone_fn(iterator):
 
-      images, labels = batch_data
-      labels = tf.one_hot(labels, num_classes)
+      images, labels = iterator.get_next()
       logits, end_points = network_fn(images)
 
       #############################
@@ -481,7 +483,7 @@ def main(_):
     # Gather initial summaries.
     summaries = set(tf.get_collection(tf.GraphKeys.SUMMARIES))
 
-    clones = model_deploy.create_clones(deploy_config, clone_fn, [iterator.get_next()])
+    clones = model_deploy.create_clones(deploy_config, clone_fn, [iterator])
     first_clone_scope = deploy_config.clone_scope(0)
     # Gather update_ops from the first clone. These contain, for example,
     # the updates for the batch_norm variables created by network_fn.
@@ -555,7 +557,7 @@ def main(_):
     update_ops.append(grad_updates)
 
     update_op = tf.group(*update_ops)
-    with tf.control_dependencies([update_op]):
+    with tf.control_dependencies([init_iterator_op, update_op]):
       train_tensor = tf.identity(total_loss, name='train_op')
 
     # Add the summaries from the first clone. These contain the summaries
@@ -566,6 +568,9 @@ def main(_):
     # Merge all summaries together.
     summary_op = tf.summary.merge(list(summaries), name='summary_op')
 
+    global_init_op = tf.initializers.global_variables()
+    init_train_op = tf.group(init_iterator_op, global_init_op)
+
     ###########################
     # Kicks off the training. #
     ###########################
@@ -575,6 +580,7 @@ def main(_):
         master=FLAGS.master,
         is_chief=(FLAGS.task == 0),
         init_fn=_get_init_fn(),
+        init_op=init_train_op,
         summary_op=summary_op,
         number_of_steps=FLAGS.max_number_of_steps,
         log_every_n_steps=FLAGS.log_every_n_steps,
