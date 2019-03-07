@@ -142,13 +142,13 @@ def parse_fn(data):
     image = tf.io.decode_image(parsed['image/encoded'])
     label = parsed['image/class/label']
     label_text = parsed['image/class/text']
-    bbox = [
-      parsed['image/object/bbox/ymin'], 
-      parsed['image/object/bbox/xmin'], 
-      parsed['image/object/bbox/ymax'],
-      parsed['image/object/bbox/xmax']
-      ]
-    object_label = parsed['image/object/class/label']
+    ymin = tf.expand_dims(parsed['image/object/bbox/ymin'].values, axis=0)
+    xmin = tf.expand_dims(parsed['image/object/bbox/xmin'].values, axis=0)
+    ymax = tf.expand_dims(parsed['image/object/bbox/ymax'].values, axis=0)
+    xmax = tf.expand_dims(parsed['image/object/bbox/xmax'].values, axis=0)
+    bbox = tf.concat([ymin, xmin, ymax, xmax], axis=0)
+
+    object_label = tf.sparse.to_dense(parsed['image/object/class/label'])
     return image, label, label_text, bbox, object_label
 
 def get_split(split_name, dataset_dir, file_pattern=None, cycle_length=2):
