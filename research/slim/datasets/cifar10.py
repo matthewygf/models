@@ -49,7 +49,8 @@ def parse_fn(data):
   parsed = tf.parse_single_example(data, keys_to_features)
   image = tf.io.decode_image(parsed["image/encoded"], channels=3)
   label = parsed["image/class/label"] 
-  return image, label
+  # haven't figured out how generalize the data map, becuase we are aiming generalize lol
+  return image, label, None
 
 def get_split(split_name, dataset_dir, file_pattern=None, cycle_length=2):
   """Gets a dataset tuple with instructions for reading cifar10.

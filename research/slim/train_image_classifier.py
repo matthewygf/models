@@ -439,11 +439,15 @@ def main(_):
     ##############################################################
     # Create a dataset provider that loads data from the dataset #
     ##############################################################
-    def image_preprocessing_dataset_fn(image, label):
+    def image_preprocessing_dataset_fn(dataset):
+      image, label, bbox = dataset
       label -= FLAGS.labels_offset
       label = tf.one_hot(label, num_classes)
       train_image_size = FLAGS.train_image_size or network_fn.default_image_size
-      image = image_preprocessing_fn(image, train_image_size, train_image_size)
+      if FLAGS.dataset_name == "imagenet":
+        image = image_preprocessing_fn(image, train_image_size, train_image_size, bbox=bbox)
+      else:
+        image = image_preprocessing_fn(image, train_image_size, train_image_size)
       return image, label
 
     with tf.device(deploy_config.inputs_device()):

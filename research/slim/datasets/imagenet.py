@@ -139,7 +139,7 @@ def parse_fn(data):
             dtype=tf.int64),
     }
     parsed = tf.parse_single_example(data, keys_to_features)
-    image = tf.io.decode_image(parsed['image/encoded'])
+    image_buffer = parsed['image/encoded'] # we leave this to later preprocessing module to decode
     label = parsed['image/class/label']
     label_text = parsed['image/class/text']
     ymin = tf.expand_dims(parsed['image/object/bbox/ymin'].values, axis=0)
@@ -148,8 +148,13 @@ def parse_fn(data):
     xmax = tf.expand_dims(parsed['image/object/bbox/xmax'].values, axis=0)
     bbox = tf.concat([ymin, xmin, ymax, xmax], axis=0)
 
+    # Force the variable number of bounding boxes into the shape
+    # [1, num_boxes, coords].
+    bbox = tf.expand_dims(bbox, 0)
+    bbox = tf.transpose(a=bbox, perm=[0, 2, 1])
+
     object_label = tf.sparse.to_dense(parsed['image/object/class/label'])
-    return image, label, label_text, bbox, object_label
+    return image_buffer, label, bbox
 
 def get_split(split_name, dataset_dir, file_pattern=None, cycle_length=2):
   """Gets a dataset tuple with instructions for reading ImageNet.
