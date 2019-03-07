@@ -439,8 +439,7 @@ def main(_):
     ##############################################################
     # Create a dataset provider that loads data from the dataset #
     ##############################################################
-    def image_preprocessing_dataset_fn(dataset):
-      image, label, bbox = dataset
+    def image_preprocessing_dataset_fn(image, label, bbox):
       label -= FLAGS.labels_offset
       label = tf.one_hot(label, num_classes)
       train_image_size = FLAGS.train_image_size or network_fn.default_image_size
