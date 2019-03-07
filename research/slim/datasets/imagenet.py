@@ -38,8 +38,6 @@ import tensorflow as tf
 
 from datasets import dataset_utils
 
-slim = tf.contrib.slim
-
 # TODO(nsilberman): Add tfrecord file type once the script is updated.
 _FILE_PATTERN = '%s-*'
 
@@ -119,7 +117,41 @@ def create_readable_names_for_imagenet_labels():
   return labels_to_names
 
 
-def get_split(split_name, dataset_dir, file_pattern=None, reader=None):
+def parse_fn(data):
+    keys_to_features = {
+        'image/encoded': tf.FixedLenFeature(
+            (), tf.string, default_value=''),
+        'image/format': tf.FixedLenFeature(
+            (), tf.string, default_value='jpeg'),
+        'image/class/label': tf.FixedLenFeature(
+            [], dtype=tf.int64, default_value=-1),
+        'image/class/text': tf.FixedLenFeature(
+            [], dtype=tf.string, default_value=''),
+        'image/object/bbox/xmin': tf.VarLenFeature(
+            dtype=tf.float32),
+        'image/object/bbox/ymin': tf.VarLenFeature(
+            dtype=tf.float32),
+        'image/object/bbox/xmax': tf.VarLenFeature(
+            dtype=tf.float32),
+        'image/object/bbox/ymax': tf.VarLenFeature(
+            dtype=tf.float32),
+        'image/object/class/label': tf.VarLenFeature(
+            dtype=tf.int64),
+    }
+    parsed = tf.parse_single_example(data, keys_to_features)
+    image = tf.io.decode_image(parsed['image/encoded'])
+    label = parsed['image/class/label']
+    label_text = parsed['image/class/text']
+    bbox = [
+      parsed['image/object/bbox/ymin'], 
+      parsed['image/object/bbox/xmin'], 
+      parsed['image/object/bbox/ymax'],
+      parsed['image/object/bbox/xmax']
+      ]
+    object_label = parsed['image/object/class/label']
+    return image, label, label_text, bbox, object_label
+
+def get_split(split_name, dataset_dir, file_pattern=None, cycle_length=2):
   """Gets a dataset tuple with instructions for reading ImageNet.
 
   Args:
@@ -143,42 +175,8 @@ def get_split(split_name, dataset_dir, file_pattern=None, reader=None):
     file_pattern = _FILE_PATTERN
   file_pattern = os.path.join(dataset_dir, file_pattern % split_name)
 
-  # Allowing None in the signature so that dataset_factory can use the default.
-  if reader is None:
-    reader = tf.TFRecordReader
-
-  keys_to_features = {
-      'image/encoded': tf.FixedLenFeature(
-          (), tf.string, default_value=''),
-      'image/format': tf.FixedLenFeature(
-          (), tf.string, default_value='jpeg'),
-      'image/class/label': tf.FixedLenFeature(
-          [], dtype=tf.int64, default_value=-1),
-      'image/class/text': tf.FixedLenFeature(
-          [], dtype=tf.string, default_value=''),
-      'image/object/bbox/xmin': tf.VarLenFeature(
-          dtype=tf.float32),
-      'image/object/bbox/ymin': tf.VarLenFeature(
-          dtype=tf.float32),
-      'image/object/bbox/xmax': tf.VarLenFeature(
-          dtype=tf.float32),
-      'image/object/bbox/ymax': tf.VarLenFeature(
-          dtype=tf.float32),
-      'image/object/class/label': tf.VarLenFeature(
-          dtype=tf.int64),
-  }
-
-  items_to_handlers = {
-      'image': slim.tfexample_decoder.Image('image/encoded', 'image/format'),
-      'label': slim.tfexample_decoder.Tensor('image/class/label'),
-      'label_text': slim.tfexample_decoder.Tensor('image/class/text'),
-      'object/bbox': slim.tfexample_decoder.BoundingBox(
-          ['ymin', 'xmin', 'ymax', 'xmax'], 'image/object/bbox/'),
-      'object/label': slim.tfexample_decoder.Tensor('image/object/class/label'),
-  }
-
-  decoder = slim.tfexample_decoder.TFExampleDecoder(
-      keys_to_features, items_to_handlers)
+  assert tf.gfile.Exists(file_pattern)
+  print("file exists -- continue getting data")
 
   labels_to_names = None
   if LOAD_READABLE_NAMES:
@@ -188,11 +186,14 @@ def get_split(split_name, dataset_dir, file_pattern=None, reader=None):
       labels_to_names = create_readable_names_for_imagenet_labels()
       dataset_utils.write_label_file(labels_to_names, dataset_dir)
 
-  return slim.dataset.Dataset(
-      data_sources=file_pattern,
-      reader=reader,
-      decoder=decoder,
-      num_samples=_SPLITS_TO_SIZES[split_name],
-      items_to_descriptions=_ITEMS_TO_DESCRIPTIONS,
-      num_classes=_NUM_CLASSES,
-      labels_to_names=labels_to_names)
+
+  # declare dataset
+  files = tf.data.Dataset.list_files([file_pattern])
+  dataset = files.apply(tf.data.experimental.parallel_interleave(
+      tf.data.TFRecordDataset, cycle_length=cycle_length
+    )
+  )
+
+  dataset = dataset.map(map_func=parse_fn, num_parallel_calls=cycle_length)
+
+  return dataset, _NUM_CLASSES, _SPLITS_TO_SIZES[split_name]

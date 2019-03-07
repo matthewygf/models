@@ -26,12 +26,12 @@ from datasets import mnist
 # NEED TO FIXED THESE DATASET LOADING
 datasets_map = {
     'flowers': flowers,
-    'imagenet': imagenet,
     'mnist': mnist,
 }
 
 datasets_map_modified = {
     'cifar10': cifar10,
+    'imagenet': imagenet,
 }
 
 def get_dataset(name, split_name, dataset_dir, file_pattern=None, cycle_length=2):
