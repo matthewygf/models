@@ -556,6 +556,7 @@ def resnet_main(
   save_checkpoints_secs = (None if distribution_strategy.__class__.__name__ in
                            ['CollectiveAllReduceStrategy',
                             'MultiWorkerMirroredStrategy'] else 60*60*24)
+  tf.compat.v1.logging.info("distribution strategy: %s" % str(distribution_strategy.__class__.__name__))
   run_config = tf.estimator.RunConfig(
       train_distribute=distribution_strategy,
       session_config=session_config,
