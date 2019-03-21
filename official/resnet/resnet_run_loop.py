@@ -266,8 +266,6 @@ def learning_rate_with_decay(
                      false_fn=lambda: lr)
     return lr
 
-
-
   def poly_rate_fn(global_step):
     """Handles linear scaling rule, gradual warmup, and LR decay.
 
@@ -277,10 +275,10 @@ def learning_rate_with_decay(
     decay schedule with power 2.0.
 
     Args:
-    global_step: the current global_step
+      global_step: the current global_step
 
     Returns:
-    returns the current learning rate
+      returns the current learning rate
     """
 
     # Learning rate schedule for LARS polynomial schedule
@@ -317,7 +315,6 @@ def learning_rate_with_decay(
   # For LARS we have a new learning rate schedule
   if flags.FLAGS.enable_lars:
     return poly_rate_fn
-
 
   return learning_rate_fn
 
@@ -360,6 +357,7 @@ def resnet_model_fn(features, labels, mode, model_class,
       from the loss.
     dtype: the TensorFlow dtype to use for calculations.
     fine_tune: If True only train the dense layers(final layers).
+    label_smoothing: If greater than 0 then smooth the labels.
 
   Returns:
     EstimatorSpec parameterized according to the input params and the
@@ -402,7 +400,7 @@ def resnet_model_fn(features, labels, mode, model_class,
         logits=logits, onehot_labels=one_hot_labels,
         label_smoothing=label_smoothing)
   else:
-    cross_entropy = tf.losses.sparse_softmax_cross_entropy(
+    cross_entropy = tf.compat.v1.losses.sparse_softmax_cross_entropy(
         logits=logits, labels=labels)
 
   # Create a tensor named cross_entropy for logging purposes.
@@ -603,7 +601,7 @@ def resnet_main(
       model_dir=flags_obj.model_dir,
       batch_size=flags_obj.batch_size)
 
-  def input_fn_train(num_epochs):
+  def input_fn_train(num_epochs, input_context=None):
     return input_function(
         is_training=True,
         data_dir=flags_obj.data_dir,
@@ -612,7 +610,8 @@ def resnet_main(
         num_epochs=num_epochs,
         dtype=flags_core.get_tf_dtype(flags_obj),
         datasets_num_private_threads=flags_obj.datasets_num_private_threads,
-        num_parallel_batches=flags_obj.datasets_num_parallel_batches)
+        num_parallel_batches=flags_obj.datasets_num_parallel_batches,
+        input_context=input_context)
 
   def input_fn_eval():
     return input_function(
@@ -627,10 +626,13 @@ def resnet_main(
                   flags_obj.train_epochs)
 
   use_train_and_evaluate = flags_obj.use_train_and_evaluate or (
-      distribution_strategy.__class__.__name__ == 'CollectiveAllReduceStrategy')
+      distribution_strategy.__class__.__name__ in [
+          'CollectiveAllReduceStrategy', 'MultiWorkerMirroredStrategy'])
   if use_train_and_evaluate:
     train_spec = tf.estimator.TrainSpec(
-        input_fn=lambda: input_fn_train(train_epochs), hooks=train_hooks,
+        input_fn=lambda input_context=None: input_fn_train(
+            train_epochs, input_context=input_context),
+        hooks=train_hooks,
         max_steps=flags_obj.max_train_steps)
     eval_spec = tf.estimator.EvalSpec(input_fn=input_fn_eval,
                                       steps=flags_obj.max_train_steps)
@@ -664,8 +666,11 @@ def resnet_main(
         # value of num_train_epochs in the lambda function will not be changed
         # before it is used. So it is safe to ignore the pylint error here
         # pylint: disable=cell-var-from-loop
-        classifier.train(input_fn=lambda: input_fn_train(num_train_epochs),
-                         hooks=train_hooks, max_steps=flags_obj.max_train_steps)
+        classifier.train(
+            input_fn=lambda input_context=None: input_fn_train(
+                num_train_epochs, input_context=input_context),
+            hooks=train_hooks,
+            max_steps=flags_obj.max_train_steps)
 
       # flags_obj.max_train_steps is generally associated with testing and
       # profiling. As a result it is frequently called with synthetic data,
