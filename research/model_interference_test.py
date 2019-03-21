@@ -6,14 +6,21 @@ import time
 import logging
 from multiprocessing import Process
 
-mobile_net_v2_cmd = ['python3', 'slim/train_image_classifier.py', 
+mobile_net_v2_035_cmd = ['python3', 'slim/train_image_classifier.py', 
                          '--dataset_name', 'cifar10',
                          '--dataset_dir', '/datasets/cifar10',
                          '--model_name', 'mobilenet_v2_035',	
                          '--train_dir', '/experiment/mobilenet_v2_035/',
                          '--batch_size', '16']
+mobile_net_v1_025_cmd = ['python3', 'slim/train_image_classifier.py', 
+                         '--dataset_name', 'cifar10',
+                         '--dataset_dir', '/datasets/cifar10',
+                         '--model_name', 'mobilenet_v1_025',	
+                         '--train_dir', '/experiment/mobilenet_v1_025/',
+                         '--batch_size', '16']
 models_train = {
-    'mobilenet_v2_035': mobile_net_v2_cmd
+    'mobilenet_v2_035': mobile_net_v2_035_cmd,
+    'mobilenet_v1_025': mobile_net_v1_025_cmd
 }
 
 def create_process(model_name, index):
@@ -51,21 +58,19 @@ def create_process(model_name, index):
 
 def main():
     # which one we should run in parallel
-    models = ['mobilenet_v2_035', 'mobilenet_v2_035']
+    models = ['mobilenet_v1_025', 'mobilenet_v1_025']
     processes_list = []
     for i, m in enumerate(models):
         p = Process(target=create_process, args=(m, i))
         processes_list.append(p)
-    
     try:
         for p in processes_list:
             p.start()
-            p.join()
     except KeyboardInterrupt:
         for p in processes_list:
             p.terminate()
     finally:
-        print("finishhhhh!")
+        print("finishhhhh launchingggg!")
 
 if __name__ == "__main__":
     main()
