@@ -17,9 +17,16 @@ models_train = {
 }
 
 def create_process(output_dir, model_name, index):
+    execution_id = datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S-%f')
+    project_dir = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
+    output_dir = os.path.join(project_dir, execution_id)
     output_dir = os.path.join(output_dir, model_name)
     output_file = os.path.join(output_dir, 'output.log') 
     err_out_file = os.path.join(output_dir, 'err.log') 
+
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+
     err = open(err_out_file, 'w+')
     out = open(output_file, 'w+')
     try:
@@ -43,13 +50,6 @@ def create_process(output_dir, model_name, index):
         print("%s process %d finished %s" % (model_name, index, str(wall_time)))
 
 def main():
-    execution_id = datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S-%f')
-    project_dir = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
-    output_dir = os.path.join(project_dir, execution_id)
-    
-    if not os.path.exists(output_dir):
-        os.makedirs(output_dir)
-    
     # which one we should run in parallel
     models = ['mobilenet_v2_035', 'mobilenet_v2_035']
     processes_list = []
