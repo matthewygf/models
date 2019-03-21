@@ -18,9 +18,16 @@ mobile_net_v1_025_cmd = ['python3', 'slim/train_image_classifier.py',
                          '--model_name', 'mobilenet_v1_025',	
                          '--train_dir', '/experiment/mobilenet_v1_025/',
                          '--batch_size', '16']
+lenet_cmd = ['python3', 'slim/train_image_classifier.py', 
+                         '--dataset_name', 'cifar10',
+                         '--dataset_dir', '/datasets/cifar10',
+                         '--model_name', 'lenet',	
+                         '--train_dir', '/experiment/lenet/',
+                         '--batch_size', '16']
 models_train = {
     'mobilenet_v2_035': mobile_net_v2_035_cmd,
-    'mobilenet_v1_025': mobile_net_v1_025_cmd
+    'mobilenet_v1_025': mobile_net_v1_025_cmd,
+    'lenet': lenet_cmd
 }
 
 def create_process(model_name, index):
@@ -58,7 +65,7 @@ def create_process(model_name, index):
 
 def main():
     # which one we should run in parallel
-    models = ['mobilenet_v1_025', 'mobilenet_v1_025']
+    models = ['lenet', 'lenet']
     processes_list = []
     for i, m in enumerate(models):
         p = Process(target=create_process, args=(m, i))
