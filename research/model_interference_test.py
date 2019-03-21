@@ -16,7 +16,7 @@ models_train = {
     'mobilenet_v2_035': mobile_net_v2_cmd
 }
 
-def create_process(output_dir, model_name, index):
+def create_process(model_name, index):
     execution_id = datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S-%f')
     project_dir = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
     output_dir = os.path.join(project_dir, execution_id)
@@ -54,7 +54,7 @@ def main():
     models = ['mobilenet_v2_035', 'mobilenet_v2_035']
     processes_list = []
     for i, m in enumerate(models):
-        p = Process(target=create_process, args=(output_dir, m, i))
+        p = Process(target=create_process, args=(m, i))
         processes_list.append(p)
     
     try:
