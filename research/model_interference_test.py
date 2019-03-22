@@ -99,19 +99,18 @@ def main():
             p.terminate()
     finally:
         print("finishhhhh launchingggg!")
-
-    current_time = time.time()
-    while should_stop:
-        time.sleep(5)
         current_time = time.time()
-        executed = current_time - start_time
-        print("checking the time been running for %d " % executed)
-        if executed >= 60.0 * 5:
-            should_stop = True
-    
-    for p in processes_list:
-        p.terminate()
-    print("done one experiement")
+        while not should_stop:
+            time.sleep(5)
+            current_time = time.time()
+            executed = current_time - start_time
+            print("checking the time been running for %d " % executed)
+            if executed >= 60.0 * 5:
+                should_stop = True
+        
+        for p in processes_list:
+            p.terminate()
+        print("done one experiement")
 
 if __name__ == "__main__":
     main()
