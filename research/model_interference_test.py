@@ -15,7 +15,7 @@ mobile_net_v1_025_cmd = ['python3', 'slim/train_image_classifier.py',
                          '--dataset_name', 'cifar10',
                          '--dataset_dir', '/datasets/cifar10',
                          '--model_name', 'mobilenet_v1_025',
-                         '--batch_size', '64',
+                         '--batch_size', '32',
                          ]
 models_train = {
     'mobilenet_v2_035': mobile_net_v2_035_cmd,
