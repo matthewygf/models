@@ -47,7 +47,7 @@ def create_process(model_name, index, percent=0.99):
     err = open(err_out_file, 'w+')
     out = open(output_file, 'w+')
     cmd = models_train[model_name]
-    cmd += ['--train_dir', train_dir, '--gpu_memory_process', str(percent)]
+    cmd += ['--train_dir', train_dir, '--gpu_memory_fraction', str(percent)]
     try:
         start_time = time.time()
         p = subprocess.Popen(cmd, stdout=out, stderr=err)
