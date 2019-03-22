@@ -4,6 +4,7 @@ import subprocess
 import datetime
 import time
 import logging
+import psutil
 from multiprocessing import Process
 
 mobile_net_v2_035_cmd = ['python3', 'slim/train_image_classifier.py', 
@@ -110,6 +111,9 @@ def main():
         for p in processes_list:
             if p.is_alive():
                 pid = p.pid
+                parent = psutil.Process(pid)
+                for c in parent.children(recursive=True):
+                    c.kill()
                 p.terminate()
                 print("%d sent terminte signal" % pid)
         print("done one experiement")
