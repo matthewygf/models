@@ -25,7 +25,10 @@ models_train = {
 def process(line):
     # assuming slim learning
     # assuming have sec/step
-    return line.split('learning.py',1)[1].split('(', 1)[1].split('sec')[0]
+    if 'learning.py' in line:
+        return line.split('(', 1)[1].split('sec')[0]
+    else:
+        return 0.0
 
 def get_average_num_step(file_path):
     num = 0.0
