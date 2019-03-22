@@ -32,12 +32,10 @@ models_train = {
 def create_process(model_name, index, percent=0.99):
     execution_id = datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S-%f')
     project_dir = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
-    output_dir = os.path.join(project_dir, execution_id)
-    output_dir = os.path.join(output_dir, model_name)
+    output_dir = os.path.join(project_dir, execution_id+model_name)
     output_file = os.path.join(output_dir, 'output.log') 
     err_out_file = os.path.join(output_dir, 'err.log') 
-    train_dir = os.path.join(output_dir, 'experiment'+str(index))
-    train_dir = os.path.join(train_dir, model_name)
+    train_dir = os.path.join(output_dir, 'experiment')
 
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
@@ -72,13 +70,14 @@ def main():
     # which one we should run in parallel
     models = ['mobilenet_v1_025', 'mobilenet_v1_025']
     processes_list = []
-    percent = (1 / len(models)) - 0.005
+    percent = (1 / len(models)) - 0.015 # some overhead of cuda stuff i think :/
     for i, m in enumerate(models):
         p = Process(target=create_process, args=(m, i, percent))
         processes_list.append(p)
     try:
         for p in processes_list:
             p.start()
+            time.sleep(5)
     except KeyboardInterrupt:
         for p in processes_list:
             p.terminate()
