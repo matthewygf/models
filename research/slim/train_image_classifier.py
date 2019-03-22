@@ -228,6 +228,17 @@ tf.app.flags.DEFINE_boolean(
     'ignore_missing_vars', False,
     'When restoring a checkpoint would ignore missing variables.')
 
+
+#####################
+# Custom GPU Config Flags #
+#####################
+
+tf.app.flags.DEFINE_float(
+    'gpu_memory_fraction', 0.99,
+    'value from 0 to 1, if less than 0 than will error of course :P'
+)
+
+
 FLAGS = tf.app.flags.FLAGS
 
 
@@ -584,6 +595,10 @@ def main(_):
     table_init_op = tf.initializers.tables_initializer(name='init_all_tables')
     init_train_op = tf.group(init_iterator_op, global_init_op, local_init_op, table_init_op)
 
+    # GPU Sharing stuff.
+    gpu_options = tf.compat.v1.GPUOptions(per_process_gpu_memory_fraction=FLAGS.gpu_memory_fraction)
+    config_proto = tf.compat.v1.ConfigProto(gpu_options=gpu_options)
+
     ###########################
     # Kicks off the training. #
     ###########################
@@ -595,6 +610,7 @@ def main(_):
         init_fn=_get_init_fn(),
         local_init_op=init_train_op,
         summary_op=summary_op,
+        session_config=config_proto,
         number_of_steps=FLAGS.max_number_of_steps,
         log_every_n_steps=FLAGS.log_every_n_steps,
         save_summaries_secs=FLAGS.save_summaries_secs,
