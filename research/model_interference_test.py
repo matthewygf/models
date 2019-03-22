@@ -36,7 +36,7 @@ def create_process(model_name, index, percent=0.99):
     output_dir = os.path.join(output_dir, model_name)
     output_file = os.path.join(output_dir, 'output.log') 
     err_out_file = os.path.join(output_dir, 'err.log') 
-    train_dir = os.path.join(output_dir, 'experiment'+index)
+    train_dir = os.path.join(output_dir, 'experiment'+str(index))
     train_dir = os.path.join(train_dir, model_name)
 
     if not os.path.exists(output_dir):
