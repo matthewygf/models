@@ -70,7 +70,7 @@ def main():
     # which one we should run in parallel
     models = ['mobilenet_v1_025', 'mobilenet_v1_025']
     processes_list = []
-    percent = (1 / len(models)) - 0.035 # some overhead of cuda stuff i think :/
+    percent = (1 / len(models)) - 0.075 # some overhead of cuda stuff i think :/
     for i, m in enumerate(models):
         p = Process(target=create_process, args=(m, i, percent))
         processes_list.append(p)
