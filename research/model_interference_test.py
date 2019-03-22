@@ -25,7 +25,7 @@ models_train = {
 def process(line):
     # assuming slim learning
     # assuming have sec/step
-    if 'learning.py' in line:
+    if 'sec/step' in line:
         return line.split('(', 1)[1].split('sec')[0]
     else:
         return 0.0
