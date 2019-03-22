@@ -15,7 +15,7 @@ mobile_net_v1_025_cmd = ['python3', 'slim/train_image_classifier.py',
                          '--dataset_name', 'cifar10',
                          '--dataset_dir', '/datasets/cifar10',
                          '--model_name', 'mobilenet_v1_025',
-                         '--batch_size', '32',
+                         '--batch_size', '64',
                          ]
 models_train = {
     'mobilenet_v2_035': mobile_net_v2_035_cmd,
@@ -23,7 +23,9 @@ models_train = {
 }
 
 def process(line):
-    return line.split('(', 1)[1].split('sec')[0]
+    # assuming slim learning
+    # assuming have sec/step
+    return line.split('learning.py',1)[1].split('(', 1)[1].split('sec')[0]
 
 def get_average_num_step(file_path):
     num = 0.0
@@ -72,7 +74,7 @@ def create_process(model_name, index, percent=0.99):
         err.close()   
         wall_time = time.time() - start_time
         print("%s process %d finished %s" % (model_name, index, str(wall_time)))
-        num, mean = get_average_num_step(output_file)
+        num, mean = get_average_num_step(err_out_file)
         print("average num p step is %.4f" % mean)
 
 def main():
