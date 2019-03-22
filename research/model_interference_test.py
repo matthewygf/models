@@ -59,64 +59,59 @@ def create_process(model_name, index, percent=0.99):
     out = open(output_file, 'w+')
     cmd = models_train[model_name]
     cmd += ['--train_dir', train_dir, '--gpu_memory_fraction', str(percent)]
-    try:
-        start_time = time.time()
-        p = subprocess.Popen(cmd, stdout=out, stderr=err)
-        poll = None
-        pid = p.pid
-        while poll is None:
-            time.sleep(5)
-            print('Process %d still running' % pid)
-            poll = p.poll()
-        print('Process %d is finished' % pid)
-        print('finished')
-    except KeyboardInterrupt:
-        p.kill()
-        print('killed ! ! !')
-    finally:
-        out.close()
-        err.close()   
-        wall_time = time.time() - start_time
-        print("%s process %d finished %s" % (model_name, index, str(wall_time)))
-        num, mean = get_average_num_step(err_out_file)
-        print("average num p step is %.4f" % mean)
+    p = subprocess.Popen(cmd, stdout=out, stderr=err)
+    return (p, out, err, err_out_file)
+    
 
 def main():
     # which one we should run in parallel
     models = ['mobilenet_v1_025']
     processes_list = []
-    start_time = time.time()
+    err_logs = []
+    out_logs = []
+    err_file_paths = []
+    start_times = []
     percent = (1 / len(models)) - 0.075 # some overhead of cuda stuff i think :/
     for i, m in enumerate(models):
-        p = Process(target=create_process, args=(m, i, percent))
+        start_time = time.time()
+        p, err, out, file = create_process(m, i, percent)
         processes_list.append(p)
+        err_logs.append(err)
+        out_logs.append(out)
+        start_times.append(start_time)
+        err_file_paths.append(file)
+
     should_stop = False
+
     try:
-        for p in processes_list:
-            p.start()
-            time.sleep(5)
-    except KeyboardInterrupt:
-        for p in processes_list:
-            p.terminate()
-    finally:
-        print("finishhhhh launchingggg!")
-        current_time = time.time()
         while not should_stop:
             time.sleep(5)
-            current_time = time.time()
-            executed = current_time - start_time
-            print("checking the time been running for %d " % executed)
-            if executed >= 60.0 * 5:
+            if len(processes_list) <= 0:
                 should_stop = True
-        for p in processes_list:
-            if p.is_alive():
+
+            for p, err, out, start_time, path in zip(processes_list, err_logs, out_logs, start_times, err_file_paths):
+                poll = None
                 pid = p.pid
-                parent = psutil.Process(pid)
-                for c in parent.children(recursive=True):
-                    c.kill()
-                p.terminate()
-                print("%d sent terminte signal" % pid)
-        print("done one experiement")
+                if poll is None:
+                    print('Process %d still running' % pid)
+                current_time = time.time()
+                executed = current_time - start_time
+                print("checking the time, process %d been running for %d " % (pid,executed))
+                if executed >= 60.0 * 5:
+                    p.kill()
+                    err.close()
+                    out.close()
+                    processes_list.pop(p)
+                    num, mean = get_average_num_step(path)
+                    print("%d process average num p step is %d" % (pid, mean))
+        print('finished')
+    except KeyboardInterrupt:
+        for p, err, out in zip(processes_list, err_logs, out_logs):
+            pid = p.pid
+            p.kill()
+            err.close()
+            out.close()
+            print('%d killed ! ! !' % pid)
 
 if __name__ == "__main__":
     main()
