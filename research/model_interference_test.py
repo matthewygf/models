@@ -15,19 +15,26 @@ mobile_net_v1_025_cmd = ['python3', 'slim/train_image_classifier.py',
                          '--dataset_name', 'cifar10',
                          '--dataset_dir', '/datasets/cifar10',
                          '--model_name', 'mobilenet_v1_025',
-                         '--batch_size', '16',
+                         '--batch_size', '32',
                          ]
-lenet_cmd = ['python3', 'slim/train_image_classifier.py', 
-                         '--dataset_name', 'cifar10',
-                         '--dataset_dir', '/datasets/cifar10',
-                         '--model_name', 'lenet',	
-                         '--train_dir', '/experiment/lenet/',
-                         '--batch_size', '16']
 models_train = {
     'mobilenet_v2_035': mobile_net_v2_035_cmd,
     'mobilenet_v1_025': mobile_net_v1_025_cmd,
-    'lenet': lenet_cmd
 }
+
+def process(line):
+    return line.split('(', 1)[1].split('sec')[0]
+
+def get_average_num_step(file_path):
+    num = 0.0
+    mean = 0.0
+    with open(file_path, 'r') as f:
+        for line in f:
+            mean = mean * num
+            time_elapsed = process(line)
+            num += 1
+            mean = (mean + float(time_elapsed)) / num
+    return (num, mean)
 
 def create_process(model_name, index, percent=0.99):
     execution_id = datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S-%f')
@@ -65,10 +72,12 @@ def create_process(model_name, index, percent=0.99):
         err.close()   
         wall_time = time.time() - start_time
         print("%s process %d finished %s" % (model_name, index, str(wall_time)))
+        num, mean = get_average_num_step(output_file)
+        print("average num p step is %.4f" % mean)
 
 def main():
     # which one we should run in parallel
-    models = ['mobilenet_v1_025', 'mobilenet_v1_025']
+    models = ['mobilenet_v1_025']
     processes_list = []
     percent = (1 / len(models)) - 0.075 # some overhead of cuda stuff i think :/
     for i, m in enumerate(models):
