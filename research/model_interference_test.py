@@ -10,14 +10,13 @@ mobile_net_v2_035_cmd = ['python3', 'slim/train_image_classifier.py',
                          '--dataset_name', 'cifar10',
                          '--dataset_dir', '/datasets/cifar10',
                          '--model_name', 'mobilenet_v2_035',	
-                         '--train_dir', '/experiment/mobilenet_v2_035/',
                          '--batch_size', '16']
 mobile_net_v1_025_cmd = ['python3', 'slim/train_image_classifier.py', 
                          '--dataset_name', 'cifar10',
                          '--dataset_dir', '/datasets/cifar10',
-                         '--model_name', 'mobilenet_v1_025',	
-                         '--train_dir', '/experiment/mobilenet_v1_025/',
-                         '--batch_size', '16']
+                         '--model_name', 'mobilenet_v1_025',
+                         '--batch_size', '16',
+                         ]
 lenet_cmd = ['python3', 'slim/train_image_classifier.py', 
                          '--dataset_name', 'cifar10',
                          '--dataset_dir', '/datasets/cifar10',
@@ -30,22 +29,28 @@ models_train = {
     'lenet': lenet_cmd
 }
 
-def create_process(model_name, index):
+def create_process(model_name, index, percent=0.99):
     execution_id = datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S-%f')
     project_dir = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
     output_dir = os.path.join(project_dir, execution_id)
     output_dir = os.path.join(output_dir, model_name)
     output_file = os.path.join(output_dir, 'output.log') 
     err_out_file = os.path.join(output_dir, 'err.log') 
+    train_dir = os.path.join(output_dir, 'experiment'+index)
+    train_dir = os.path.join(train_dir, model_name)
 
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
+    if not os.path.exists(train_dir):
+        os.makedirs(train_dir)
 
     err = open(err_out_file, 'w+')
     out = open(output_file, 'w+')
+    cmd = models_train[model_name]
+    cmd += ['--train_dir', train_dir, '--gpu_memory_process', str(percent)]
     try:
         start_time = time.time()
-        p = subprocess.Popen(models_train[model_name], stdout=out, stderr=err)
+        p = subprocess.Popen(cmd, stdout=out, stderr=err)
         poll = None
         pid = p.pid
         while poll is None:
@@ -65,10 +70,11 @@ def create_process(model_name, index):
 
 def main():
     # which one we should run in parallel
-    models = ['lenet', 'lenet']
+    models = ['mobilenet_v1_025', 'mobilenet_v1_025']
     processes_list = []
+    percent = (1 / len(models)) - 0.005
     for i, m in enumerate(models):
-        p = Process(target=create_process, args=(m, i))
+        p = Process(target=create_process, args=(m, i, percent))
         processes_list.append(p)
     try:
         for p in processes_list:
