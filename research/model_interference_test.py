@@ -107,9 +107,11 @@ def main():
             print("checking the time been running for %d " % executed)
             if executed >= 60.0 * 5:
                 should_stop = True
-        
         for p in processes_list:
-            p.terminate()
+            if p.is_alive():
+                pid = p.pid
+                p.terminate()
+                print("%d sent terminte signal" % pid)
         print("done one experiement")
 
 if __name__ == "__main__":
