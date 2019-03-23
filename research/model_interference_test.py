@@ -45,7 +45,7 @@ def get_average_num_step(file_path):
 def create_process(model_name, index, percent=0.99):
     execution_id = datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S-%f')
     project_dir = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
-    output_dir = os.path.join(project_dir, execution_id+model_name)
+    output_dir = os.path.join(project_dir, execution_id+model_name+str(index))
     output_file = os.path.join(output_dir, 'output.log') 
     err_out_file = os.path.join(output_dir, 'err.log') 
     train_dir = os.path.join(output_dir, 'experiment')
@@ -74,13 +74,12 @@ def main():
     percent = (1 / len(models)) - 0.075 # some overhead of cuda stuff i think :/
     for i, m in enumerate(models):
         start_time = time.time()
-        p, err, out, file = create_process(m, i, percent)
+        p, out, err, path = create_process(m, i, percent)
         processes_list.append(p)
         err_logs.append(err)
         out_logs.append(out)
         start_times.append(start_time)
-        err_file_paths.append(file)
-
+        err_file_paths.append(path)
     should_stop = False
 
     try:
@@ -89,7 +88,7 @@ def main():
             if len(processes_list) <= 0:
                 should_stop = True
 
-            for p, err, out, start_time, path in zip(processes_list, err_logs, out_logs, start_times, err_file_paths):
+            for i,(p, err, out, start_time, path) in enumerate(zip(processes_list, err_logs, out_logs, start_times, err_file_paths)):
                 poll = None
                 pid = p.pid
                 if poll is None:
@@ -101,9 +100,15 @@ def main():
                     p.kill()
                     err.close()
                     out.close()
-                    processes_list.pop(p)
-                    num, mean = get_average_num_step(path)
-                    print("%d process average num p step is %d" % (pid, mean))
+                    path_i = path
+                    print(path_i) 
+                    num, mean = get_average_num_step(path_i)
+                    processes_list.pop(i)
+                    err_logs.pop(i)
+                    out_logs.pop(i)
+                    start_times.pop(i)
+                    err_file_paths.pop(i)
+                    print("%d process average num p step is %.4f and total number of step is: %d" % (pid, mean, num))
         print('finished')
     except KeyboardInterrupt:
         for p, err, out in zip(processes_list, err_logs, out_logs):
