@@ -7,20 +7,26 @@ import logging
 import psutil
 from multiprocessing import Process
 
-mobile_net_v2_035_cmd = ['python3', 'slim/train_image_classifier.py', 
+mobile_net_v2_035_cmd = ['python3', 'research/slim/train_image_classifier.py', 
                          '--dataset_name', 'cifar10',
                          '--dataset_dir', '/datasets/cifar10',
                          '--model_name', 'mobilenet_v2_035',	
                          '--batch_size', '16']
-mobile_net_v1_025_cmd = ['python3', 'slim/train_image_classifier.py', 
+mobile_net_v1_025_cmd = ['python3', 'research/slim/train_image_classifier.py', 
                          '--dataset_name', 'cifar10',
                          '--dataset_dir', '/datasets/cifar10',
                          '--model_name', 'mobilenet_v1_025',
                          '--batch_size', '32',
                          ]
+ptb_word_lm_cmd = ['python3', 'tutorials/rnn/ptb/ptb_word_lm.py',
+                   '--data_path','/models/simple-examples/data/',
+                   '--model','small',
+                   '--rnn_mode', 'cudnn'
+                  ]
 models_train = {
     'mobilenet_v2_035': mobile_net_v2_035_cmd,
     'mobilenet_v1_025': mobile_net_v1_025_cmd,
+    'ptb_word_lm': ptb_word_lm_cmd
 }
 
 def process(line):
@@ -58,14 +64,15 @@ def create_process(model_name, index, percent=0.99):
     err = open(err_out_file, 'w+')
     out = open(output_file, 'w+')
     cmd = models_train[model_name]
-    cmd += ['--train_dir', train_dir, '--gpu_memory_fraction', str(percent)]
+    train_dir_path = '--train_dir' if 'word' not in model_name else '--save_path' 
+    cmd += [train_dir_path, train_dir, '--gpu_memory_fraction', str(percent)]
     p = subprocess.Popen(cmd, stdout=out, stderr=err)
     return (p, out, err, err_out_file)
     
 
 def main():
     # which one we should run in parallel
-    models = ['mobilenet_v1_025']
+    models = ['ptb_word_lm']
     processes_list = []
     err_logs = []
     out_logs = []

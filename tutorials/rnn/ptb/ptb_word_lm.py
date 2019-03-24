@@ -414,7 +414,7 @@ def run_epoch(session, model, eval_op=None, verbose=False, global_step=None, is_
       "final_state": model.final_state
   }
   if is_training:
-    fetches["global_step"]: model.global_op
+    fetches["global_step"] = model.global_op
 
   if eval_op is not None:
     fetches["eval_op"] = eval_op
