@@ -417,7 +417,7 @@ def run_epoch(session, model, eval_op=None, verbose=False, global_step=None):
 
     vals = session.run(fetches, feed_dict)
     time_elapsed = time.time() - step_start_time
-    tf.compat.v1.logging.info('global step %d, (%.3f sec/step)', (global_step, time_elapsed))
+    tf.compat.v1.logging.info('global step %d, (%.3f sec/step)', global_step, time_elapsed)
     cost = vals["cost"]
     state = vals["final_state"]
 
