@@ -394,7 +394,7 @@ class TestConfig(object):
   rnn_mode = BLOCK
 
 
-def run_epoch(session, model, eval_op=None, verbose=False):
+def run_epoch(session, model, eval_op=None, verbose=False, global_step=None):
   """Runs the model on the given data."""
   start_time = time.time()
   costs = 0.0
@@ -409,12 +409,15 @@ def run_epoch(session, model, eval_op=None, verbose=False):
     fetches["eval_op"] = eval_op
 
   for step in range(model.input.epoch_size):
+    step_start_time = time.time()
     feed_dict = {}
     for i, (c, h) in enumerate(model.initial_state):
       feed_dict[c] = state[i].c
       feed_dict[h] = state[i].h
 
     vals = session.run(fetches, feed_dict)
+    time_elapsed = time.time() - step_start_time
+    tf.compat.v1.logging.info('global step %d, (%.3f sec/step)', (global_step, time_elapsed))
     cost = vals["cost"]
     state = vals["final_state"]
 
@@ -523,7 +526,7 @@ def main(_):
 
         print("Epoch: %d Learning rate: %.3f" % (i + 1, session.run(m.lr)))
         train_perplexity = run_epoch(session, m, eval_op=m.train_op,
-                                     verbose=True)
+                                     verbose=True, global_step=sv.global_step)
         print("Epoch: %d Train Perplexity: %.3f" % (i + 1, train_perplexity))
         valid_perplexity = run_epoch(session, mvalid)
         print("Epoch: %d Valid Perplexity: %.3f" % (i + 1, valid_perplexity))
@@ -537,4 +540,5 @@ def main(_):
 
 
 if __name__ == "__main__":
+  tf.logging.set_verbosity(tf.logging.INFO)
   tf.app.run()
