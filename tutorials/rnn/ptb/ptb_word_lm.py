@@ -169,9 +169,12 @@ class PTBModel(object):
     grads, _ = tf.clip_by_global_norm(tf.gradients(self._cost, tvars),
                                       config.max_grad_norm)
     optimizer = tf.train.GradientDescentOptimizer(self._lr)
+    global_step_op = tf.train.get_or_create_global_step()
     self._train_op = optimizer.apply_gradients(
         zip(grads, tvars),
-        global_step=tf.train.get_or_create_global_step())
+        global_step=global_step_op)
+
+    self._global_step_op = global_step_op
 
     self._new_lr = tf.placeholder(
         tf.float32, shape=[], name="new_learning_rate")
@@ -316,6 +319,10 @@ class PTBModel(object):
   @property
   def train_op(self):
     return self._train_op
+  
+  @property
+  def global_op(self):
+    return self._global_step_op
 
   @property
   def initial_state_name(self):
@@ -404,6 +411,7 @@ def run_epoch(session, model, eval_op=None, verbose=False, global_step=None):
   fetches = {
       "cost": model.cost,
       "final_state": model.final_state,
+      "global_step": model.global_op
   }
   if eval_op is not None:
     fetches["eval_op"] = eval_op
@@ -417,7 +425,7 @@ def run_epoch(session, model, eval_op=None, verbose=False, global_step=None):
 
     vals = session.run(fetches, feed_dict)
     time_elapsed = time.time() - step_start_time
-    tf.compat.v1.logging.info('global step %d, (%.3f sec/step)', global_step, time_elapsed)
+    tf.compat.v1.logging.info('global step %d, (%.3f sec/step)', vals["global_step"], time_elapsed)
     cost = vals["cost"]
     state = vals["final_state"]
 
