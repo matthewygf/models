@@ -89,6 +89,15 @@ flags.DEFINE_string("rnn_mode", None,
                     "The low level implementation of lstm cell: one of CUDNN, "
                     "BASIC, and BLOCK, representing cudnn_lstm, basic_lstm, "
                     "and lstm_block_cell classes.")
+
+#####################
+# Custom GPU Config Flags #
+#####################
+
+flags.DEFINE_float(
+    'gpu_memory_fraction', 0.99,
+    'value from 0 to 1, if less than 0 than will error of course :P'
+)
 FLAGS = flags.FLAGS
 BASIC = "basic"
 CUDNN = "cudnn"
@@ -502,7 +511,11 @@ def main(_):
     for model in models.values():
       model.import_ops()
     sv = tf.train.Supervisor(logdir=FLAGS.save_path)
-    config_proto = tf.ConfigProto(allow_soft_placement=soft_placement)
+    # GPU Sharing stuff.
+    gpu_options = tf.compat.v1.GPUOptions(per_process_gpu_memory_fraction=FLAGS.gpu_memory_fraction)
+    config_proto = tf.compat.v1.ConfigProto(gpu_options=gpu_options,
+                                            allow_soft_placement=soft_placement
+                                           )
     with sv.managed_session(config=config_proto) as session:
       for i in range(config.max_max_epoch):
         lr_decay = config.lr_decay ** max(i + 1 - config.max_epoch, 0.0)
