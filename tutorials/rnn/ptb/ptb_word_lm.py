@@ -280,6 +280,7 @@ class PTBModel(object):
       self._lr = tf.get_collection_ref("lr")[0]
       self._new_lr = tf.get_collection_ref("new_lr")[0]
       self._lr_update = tf.get_collection_ref("lr_update")[0]
+      self._global_step_op = tf.get_collection_ref(tf.GraphKeys.GLOBAL_STEP)[0]
       rnn_params = tf.get_collection_ref("rnn_params")
       if self._cell and rnn_params:
         params_saveable = tf.contrib.cudnn_rnn.RNNParamsSaveable(
