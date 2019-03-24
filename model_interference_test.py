@@ -73,64 +73,70 @@ def create_process(model_name, index, percent=0.99):
 def main():
     # which one we should run in parallel
     sets = [['mobilenet_v1_025'], ['mobilenet_v1_025', 'mobilenet_v1_025'], ['ptb_word_lm']]
+    project_dir = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
     for experiment_index, ex in enumerate(sets):
-        processes_list = []
-        err_logs = []
-        out_logs = []
-        err_file_paths = []
-        start_times = []
-        trackers = []
-        percent = (1 / len(ex)) - 0.075 # some overhead of cuda stuff i think :/
-        for i, m in enumerate(ex):
-            start_time = time.time()
-            p, out, err, path, out_dir = create_process(m, i, percent)
-            tracker = p_track.ProcessInfoTracker(out_dir, p.pid)
-            tracker.start()
-            processes_list.append(p)
-            err_logs.append(err)
-            out_logs.append(out)
-            start_times.append(start_time)
-            err_file_paths.append(path)
-            trackers.append(tracker)
-        should_stop = False
+        experiment_file = os.path.join(project_dir, 'experiment'+str(experiment_index))
+        average_file = open(experiment_file, mode='w+')
+        for experiment_run in range(1, 6):
+            processes_list = []
+            err_logs = []
+            out_logs = []
+            err_file_paths = []
+            start_times = []
+            trackers = []
+            percent = (1 / len(ex)) - 0.075 # some overhead of cuda stuff i think :/
+            for i, m in enumerate(ex):
+                start_time = time.time()
+                p, out, err, path, out_dir = create_process(m, i, percent)
+                tracker = p_track.ProcessInfoTracker(out_dir, p.pid)
+                tracker.start()
+                processes_list.append(p)
+                err_logs.append(err)
+                out_logs.append(out)
+                start_times.append(start_time)
+                err_file_paths.append(path)
+                trackers.append(tracker)
+            should_stop = False
 
-        try:
-            while not should_stop:
-                time.sleep(5)
-                if len(processes_list) <= 0:
-                    should_stop = True
+            try:
+                while not should_stop:
+                    time.sleep(5)
+                    if len(processes_list) <= 0:
+                        should_stop = True
 
-                for i,(p, err, out, start_time, path, tracker) in enumerate(zip(processes_list, err_logs, out_logs, start_times, err_file_paths, trackers)):
-                    poll = None
+                    for i,(p, err, out, start_time, path, tracker) in enumerate(zip(processes_list, err_logs, out_logs, start_times, err_file_paths, trackers)):
+                        poll = None
+                        pid = p.pid
+                        if poll is None:
+                            print('Process %d still running' % pid)
+                        current_time = time.time()
+                        executed = current_time - start_time
+                        print("checking the time, process %d been running for %d " % (pid,executed))
+                        if executed >= 60.0 * 5:
+                            p.kill()
+                            err.close()
+                            out.close()
+                            path_i = path
+                            print(path_i) 
+                            num, mean = get_average_num_step(path_i)
+                            processes_list.pop(i)
+                            err_logs.pop(i)
+                            out_logs.pop(i)
+                            start_times.pop(i)
+                            err_file_paths.pop(i)
+                            tracker.stop()
+                            trackers.pop(i)
+                            line = "experiment_run %d: %d process average num p step is %.4f and total number of step is: %d" % (experiment_run, pid, mean, num)
+                            average_file.write(line)
+                print('total experiments: %d, experiment_run %d , finished %d' % (len(sets)-1, experiment_run, experiment_index))
+            except KeyboardInterrupt:
+                for p, err, out in zip(processes_list, err_logs, out_logs):
                     pid = p.pid
-                    if poll is None:
-                        print('Process %d still running' % pid)
-                    current_time = time.time()
-                    executed = current_time - start_time
-                    print("checking the time, process %d been running for %d " % (pid,executed))
-                    if executed >= 60.0 * 5:
-                        p.kill()
-                        err.close()
-                        out.close()
-                        path_i = path
-                        print(path_i) 
-                        num, mean = get_average_num_step(path_i)
-                        processes_list.pop(i)
-                        err_logs.pop(i)
-                        out_logs.pop(i)
-                        start_times.pop(i)
-                        err_file_paths.pop(i)
-                        tracker.stop()
-                        trackers.pop(i)
-                        print("%d process average num p step is %.4f and total number of step is: %d" % (pid, mean, num))
-            print('total experiments: %d, finished %d' % (len(sets), experiment_index))
-        except KeyboardInterrupt:
-            for p, err, out in zip(processes_list, err_logs, out_logs):
-                pid = p.pid
-                p.kill()
-                err.close()
-                out.close()
-                print('%d killed ! ! !' % pid)
+                    p.kill()
+                    err.close()
+                    out.close()
+                    print('%d killed ! ! !' % pid)
+        average_file.close()
 
 if __name__ == "__main__":
     main()

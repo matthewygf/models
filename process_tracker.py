@@ -35,8 +35,11 @@ class ProcessInfoTracker(object):
     self.scheduler = sched.scheduler(time.time, time.sleep)
     self.process_info = {}
     self.process_info['max_rss'] = 0
+    self.process_info['average_mem_percent'] = 0
     self.process_info['max_vms'] = 0
     self.process_info['max_cpu_percent'] = 0
+    self.process_info['average_cpu_percent'] = 0
+    self.log_times = 0
     self.exit_event = threading.Event()
     self.last_exception = None
     self.start_time = None
@@ -67,11 +70,15 @@ class ProcessInfoTracker(object):
       # This is a blocking call which takes 0.1 second.
       # This affects the interval # at which the metrics are reported
       cpu_percent = p.cpu_percent(interval=0.1)
-
+      mem_percent = p.memory_percent()
+      mean_mem = (self.log_times * self.process_info['average_mem_percent']) + mem_percent
+      mean_cpu = (self.log_times * self.process_info['average_cpu_percent']) + cpu_percent
+      self.process_info['average_mem_percent'] = mean_mem / (self.log_times + 1)
+      self.process_info['average_cpu_percent'] = mean_cpu / (self.log_times + 1)
       self.process_info['max_rss'] = max(self.process_info['max_rss'], memory_info.rss)  # pylint: disable=line-too-long
       self.process_info['max_vms'] = max(self.process_info['max_vms'], memory_info.vms)  # pylint: disable=line-too-long
       self.process_info['max_cpu_percent'] = max(self.process_info['max_cpu_percent'], cpu_percent)  # pylint: disable=line-too-long
-
+      self.log_times += 1
       entry = {}
       entry['time'] = time.time() - self.start_time
       entry['rss'] = memory_info.rss
