@@ -78,7 +78,7 @@ def run(
         os.makedirs(experiment_path)
 
     for experiment_run in range(1, 6):
-        if os.path.exists(average_file):
+        if os.path.exists(average_log):
             average_file = open(average_log, mode='a+')
         else:
             average_file = open(average_log, mode='w+')
