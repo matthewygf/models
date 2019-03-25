@@ -34,9 +34,7 @@ class SystemInfoTracker(object):
     self.process_info_log = open(os.path.join(output_dir, 'system.log'), 'w+')  # pylint: disable=line-too-long
     self.scheduler = sched.scheduler(time.time, time.sleep)
     self.process_info = {}
-    self.process_info['max_rss'] = 0
     self.process_info['average_mem_percent'] = 0
-    self.process_info['max_vms'] = 0
     self.process_info['max_cpu_percent'] = 0
     self.process_info['average_cpu_percent'] = 0
     self.log_times = 0
@@ -64,24 +62,23 @@ class SystemInfoTracker(object):
     """Read and update process info using background thread every 1 second."""
 
     try:
-      memory_info = psutil.memory_info()
       # This is a blocking call which takes 0.1 second.
-      # This affects the interval # at which the metrics are reported
+      # This affects the interval 
+      # at which the metrics are reported
       cpu_percent = psutil.cpu_percent(interval=0.1)
       mem_percent = psutil.memory_percent()
       mean_mem = (self.log_times * self.process_info['average_mem_percent']) + mem_percent
       mean_cpu = (self.log_times * self.process_info['average_cpu_percent']) + cpu_percent
       self.process_info['average_mem_percent'] = mean_mem / (self.log_times + 1)
       self.process_info['average_cpu_percent'] = mean_cpu / (self.log_times + 1)
-      self.process_info['max_rss'] = max(self.process_info['max_rss'], memory_info.rss)  # pylint: disable=line-too-long
-      self.process_info['max_vms'] = max(self.process_info['max_vms'], memory_info.vms)  # pylint: disable=line-too-long
       self.process_info['max_cpu_percent'] = max(self.process_info['max_cpu_percent'], cpu_percent)  # pylint: disable=line-too-long
       self.log_times += 1
       entry = {}
       entry['time'] = time.time() - self.start_time
-      entry['rss'] = memory_info.rss
-      entry['vms'] = memory_info.vms
       entry['cpu_percent'] = cpu_percent
+      entry['mem_percent'] = mem_percent
+      entry['average_cpu_percent'] = self.process_info['average_cpu_percent']
+      entry['average_mem_percent'] = self.process_info['average_mem_percent']
       self.process_info_log.write(json.dumps(entry) + '\n')
       if not self.exit_event.is_set():
         # Schedule the next event to be run after 1 second

@@ -84,6 +84,8 @@ class ProcessInfoTracker(object):
       entry['rss'] = memory_info.rss
       entry['vms'] = memory_info.vms
       entry['cpu_percent'] = cpu_percent
+      entry['average_mem_percent'] = self.process_info['average_mem_percent']
+      entry['average_cpu_percent'] = self.process_info['average_cpu_percent']
       self.process_info_log.write(json.dumps(entry) + '\n')
       if not self.exit_event.is_set():
         # Schedule the next event to be run after 1 second
