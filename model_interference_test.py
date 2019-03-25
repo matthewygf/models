@@ -153,7 +153,7 @@ def run(
                 print('%d killed ! ! !' % pid)
         average_file.close()
         sys_tracker.stop()
-        
+
     # Experiment average size.
     average_file = open(average_log, mode='a+')
     for i in range(len(experiment_set)):
@@ -170,7 +170,7 @@ def main():
         current_experiment_path = os.path.join(experiment_path, str(experiment_index))
         experiment_file = os.path.join(experiment_path, 'experiment.log')
 
-        mean_num, mean_time_p_step = run(experiment_file, current_experiment_path, ex, len(sets), experiment_index)
+        run(experiment_file, current_experiment_path, ex, len(sets), experiment_index)
         
 
 if __name__ == "__main__":
