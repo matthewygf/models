@@ -170,16 +170,20 @@ def main():
     sets = [['mobilenet_v1_025'], ['mobilenet_v1_025', 'mobilenet_v1_025'], ['ptb_word_lm'], ['ptb_word_lm', 'ptb_word_lm']]
     project_dir = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
     experiment_path = os.path.join(project_dir, 'experiment')
-    nvprof_p = subprocess.Popen(['nvprod', '--profile-all-process', '--profile-child-processes', '--log-file', 'nvprof.log'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    nv_out_log = os.path.join(project_dir, 'nv_out.log')
+    nv_err_log = os.path.join(project_dir, 'nv_out.log')
+    nv_err = open(nv_err_log, 'w+')
+    nv_out = open(nv_out_log, 'w+')
+    nvprof_p = subprocess.Popen(['nvprof', '--profile-all-process', '--profile-child-processes', '--log-file', '/models/nvprof.log'], stdout=nv_out, stderr=nv_err)
 
     for experiment_index, ex in enumerate(sets):
         current_experiment_path = os.path.join(experiment_path, str(experiment_index))
         experiment_file = os.path.join(experiment_path, 'experiment.log')
 
         run(experiment_file, current_experiment_path, ex, len(sets), experiment_index)
-    
     nvprof_p.terminate()
-        
+    nv_err.close()
+    nv_out.close()        
 
 if __name__ == "__main__":
     main()
