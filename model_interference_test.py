@@ -93,6 +93,7 @@ def run(
         err_file_paths = []
         start_times = []
         trackers = []
+        ids = {}
         percent = (1 / len(experiment_set)) - 0.075 # some overhead of cuda stuff i think :/
         for i, m in enumerate(experiment_set):
             start_time = time.time()
@@ -105,6 +106,7 @@ def run(
             start_times.append(start_time)
             err_file_paths.append(path)
             trackers.append(tracker)
+            ids[p.pid] = i
         should_stop = False
         sys_tracker = sys_track.SystemInfoTracker(experiment_path)
         
@@ -130,6 +132,10 @@ def run(
                         path_i = path
                         print(path_i) 
                         num, mean = get_average_num_step(path_i)
+                        model_index = ids[pid]
+                        mean_num_models[model_index] = ((accumulated_models[model_index] * mean_num_models[model_index]) + num) / (accumulated_models[model_index] + 1.0)
+                        mean_time_p_steps[model_index] = ((accumulated_models[model_index] * mean_time_p_steps[model_index]) + mean) / (accumulated_models[model_index] + 1.0)
+                        accumulated_models[model_index] += 1.0
                         processes_list.pop(i)
                         err_logs.pop(i)
                         out_logs.pop(i)
@@ -140,9 +146,7 @@ def run(
                         line = ("experiment set %d, experiment_run %d: %d process average num p step is %.4f and total number of step is: %d \n" % 
                                     (experiment_index, experiment_run, pid, mean, num))
                         average_file.write(line)
-                        mean_num_models[i] = ((accumulated_models[i] * mean_num_models[i]) + num) / (accumulated_models[i] + 1.0)
-                        mean_time_p_steps[i] = ((accumulated_models[i] * mean_time_p_steps[i]) + mean) / (accumulated_models[i] + 1.0)
-                        accumulated_models[i] += 1.0
+                        
             print('total experiments: %d, experiment_run %d , finished %d' % (total_length-1, experiment_run, experiment_index))
         except KeyboardInterrupt:
             for p, err, out in zip(processes_list, err_logs, out_logs):
@@ -166,11 +170,15 @@ def main():
     sets = [['mobilenet_v1_025'], ['mobilenet_v1_025', 'mobilenet_v1_025'], ['ptb_word_lm'], ['ptb_word_lm', 'ptb_word_lm']]
     project_dir = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
     experiment_path = os.path.join(project_dir, 'experiment')
+    nvprof_p = subprocess.Popen(['nvprod', '--profile-all-process', '--profile-child-processes', '--log-file', 'nvprof.log'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
     for experiment_index, ex in enumerate(sets):
         current_experiment_path = os.path.join(experiment_path, str(experiment_index))
         experiment_file = os.path.join(experiment_path, 'experiment.log')
 
         run(experiment_file, current_experiment_path, ex, len(sets), experiment_index)
+    
+    nvprof_p.terminate()
         
 
 if __name__ == "__main__":
