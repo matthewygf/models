@@ -72,7 +72,7 @@ def create_process(model_name, index, experiment_path, percent=0.99):
 def run(
     experiment_log_file, experiment_path, 
     experiment_set, total_length, 
-    experiment_index, scheduler):
+    experiment_index):
     average_file = open(experiment_log_file, mode='w+')
     for experiment_run in range(1, 6):
         processes_list = []
