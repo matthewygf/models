@@ -78,7 +78,10 @@ def run(
         os.makedirs(experiment_path)
 
     for experiment_run in range(1, 6):
-        average_file = open(average_log, mode='w+')
+        if os.path.exists(average_file):
+            average_file = open(average_log, mode='a+')
+        else:
+            average_file = open(average_log, mode='w+')
         processes_list = []
         err_logs = []
         out_logs = []
@@ -129,7 +132,8 @@ def run(
                         err_file_paths.pop(i)
                         tracker.stop()
                         trackers.pop(i)
-                        line = "experiment_run %d: %d process average num p step is %.4f and total number of step is: %d \n" % (experiment_run, pid, mean, num)
+                        line = ("experiment set %d, experiment_run %d: %d process average num p step is %.4f and total number of step is: %d \n" % 
+                                    (experiment_index, experiment_run, pid, mean, num))
                         average_file.write(line)
             print('total experiments: %d, experiment_run %d , finished %d' % (total_length-1, experiment_run, experiment_index))
         except KeyboardInterrupt:
@@ -144,7 +148,7 @@ def run(
     
 def main():
     # which one we should run in parallel
-    sets = [['mobilenet_v1_025'], ['mobilenet_v1_025', 'mobilenet_v1_025'], ['ptb_word_lm']]
+    sets = [['mobilenet_v1_025'], ['mobilenet_v1_025', 'mobilenet_v1_025'], ['ptb_word_lm'], ['ptb_word_lm', 'ptb_word_lm']]
     project_dir = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
     experiment_path = os.path.join(project_dir, 'experiment')
     for experiment_index, ex in enumerate(sets):
