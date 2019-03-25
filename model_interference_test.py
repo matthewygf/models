@@ -7,6 +7,7 @@ import logging
 import psutil
 import process_tracker as p_track
 import system_tracker as sys_track
+import numpy as np
 
 mobile_net_v2_035_cmd = ['python3', 'research/slim/train_image_classifier.py', 
                          '--dataset_name', 'cifar10',
@@ -77,6 +78,10 @@ def run(
     if not os.path.exists(experiment_path):
         os.makedirs(experiment_path)
 
+    mean_num_models = np.zeros(len(experiment_set), dtype=float)
+    mean_time_p_steps = np.zeros(len(experiment_set), dtype=float)
+    accumulated_models = np.zeros(len(experiment_set), dtype=float)
+
     for experiment_run in range(1, 6):
         if os.path.exists(average_log):
             average_file = open(average_log, mode='a+')
@@ -135,6 +140,9 @@ def run(
                         line = ("experiment set %d, experiment_run %d: %d process average num p step is %.4f and total number of step is: %d \n" % 
                                     (experiment_index, experiment_run, pid, mean, num))
                         average_file.write(line)
+                        mean_num_models[i] = ((accumulated_models[i] * mean_num_models[i]) + num) / (accumulated_models[i] + 1.0)
+                        mean_time_p_steps[i] = ((accumulated_models[i] * mean_time_p_steps[i]) + mean) / (accumulated_models[i] + 1.0)
+                        accumulated_models[i] += 1.0
             print('total experiments: %d, experiment_run %d , finished %d' % (total_length-1, experiment_run, experiment_index))
         except KeyboardInterrupt:
             for p, err, out in zip(processes_list, err_logs, out_logs):
@@ -145,6 +153,13 @@ def run(
                 print('%d killed ! ! !' % pid)
         average_file.close()
         sys_tracker.stop()
+        
+    # Experiment average size.
+    average_file = open(average_log, mode='a+')
+    for i in range(len(experiment_set)):
+        average_file.write("TOTAL: In experiment %d average mean sec/step and average number for model %d are %.4f , %d \n" % 
+                        (experiment_index, i, mean_time_p_steps[i], mean_num_models[i]))
+    average_file.close()
     
 def main():
     # which one we should run in parallel
@@ -155,7 +170,7 @@ def main():
         current_experiment_path = os.path.join(experiment_path, str(experiment_index))
         experiment_file = os.path.join(experiment_path, 'experiment.log')
 
-        run(experiment_file, current_experiment_path, ex, len(sets), experiment_index)
+        mean_num, mean_time_p_step = run(experiment_file, current_experiment_path, ex, len(sets), experiment_index)
         
 
 if __name__ == "__main__":

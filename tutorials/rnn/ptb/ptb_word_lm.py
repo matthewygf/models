@@ -346,7 +346,6 @@ class SmallConfig(object):
   max_max_epoch = 13
   keep_prob = 1.0
   lr_decay = 0.5
-  #batch_size = 20
   batch_size = 16
   vocab_size = 10000
   rnn_mode = BLOCK
