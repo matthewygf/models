@@ -70,10 +70,15 @@ def create_process(model_name, index, experiment_path, percent=0.99):
     return (p, out, err, err_out_file, output_dir)
 
 def run(
-    experiment_log_file, experiment_path, 
+    average_log, experiment_path, 
     experiment_set, total_length, 
     experiment_index):
-    average_file = open(experiment_log_file, mode='w+')
+    
+    if not os.path.exists(experiment_path):
+        os.makedirs(experiment_path)
+
+    average_file = open(average_log, mode='w+')
+
     for experiment_run in range(1, 6):
         processes_list = []
         err_logs = []
@@ -145,9 +150,9 @@ def main():
     experiment_path = os.path.join(project_dir, 'experiment')
     for experiment_index, ex in enumerate(sets):
         current_experiment_path = os.path.join(experiment_path, str(experiment_index))
-        experiment_file = os.path.join(current_experiment_path, 'experiment.log')
+        experiment_file = os.path.join(experiment_path, 'experiment.log')
 
-        run(experiment_file, experiment_path, ex, len(sets), experiment_index)
+        run(experiment_file, current_experiment_path, ex, len(sets), experiment_index)
         
 
 if __name__ == "__main__":
