@@ -167,7 +167,7 @@ def run(
     
 def main():
     # which one we should run in parallel
-    sets = [['ptb_word_lm']]
+    sets = [['ptb_word_lm'], ['ptb_word_lm', 'ptb_word_lm']]
     project_dir = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
     experiment_path = os.path.join(project_dir, 'experiment')
     #nv_out_log = os.path.join(project_dir, 'nv_out.log')
