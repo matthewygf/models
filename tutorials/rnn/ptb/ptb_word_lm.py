@@ -527,14 +527,16 @@ def main(_):
       model.import_ops()
     stop_hook = tf.train.StopAtStepHook(last_step=config.max_max_epoch * config.num_steps)
     # GPU Sharing stuff.
+    tf.compat.v1.logging.info('GPU Memory fraction : %.3f' % FLAGS.gpu_memory_fraction)
     gpu_options = tf.compat.v1.GPUOptions(per_process_gpu_memory_fraction=FLAGS.gpu_memory_fraction)
     config_proto = tf.compat.v1.ConfigProto(gpu_options=gpu_options,
                                             allow_soft_placement=soft_placement
                                            )
-    with tf.train.MonitoredTrainingSession(
+    with tf.compat.v1.train.MonitoredTrainingSession(
             checkpoint_dir=FLAGS.save_path,
             config=config_proto,
             hooks=[stop_hook]) as session:
+      i = 0
       while not session.should_stop():
         lr_decay = config.lr_decay ** max(i + 1 - config.max_epoch, 0.0)
         m.assign_lr(session, config.learning_rate * lr_decay)
@@ -545,6 +547,8 @@ def main(_):
         print("Epoch: %d Train Perplexity: %.3f" % (i + 1, train_perplexity))
         valid_perplexity = run_epoch(session, mvalid)
         print("Epoch: %d Valid Perplexity: %.3f" % (i + 1, valid_perplexity))
+        i += 1
+        print("ran epoch %d" % i)
 
       test_perplexity = run_epoch(session, mtest)
       print("Test Perplexity: %.3f" % test_perplexity)
