@@ -339,15 +339,15 @@ class SmallConfig(object):
   init_scale = 0.1
   learning_rate = 1.0
   max_grad_norm = 5
-  num_layers = 2
+  num_layers = 1
   num_steps = 20
-  hidden_size = 200
+  hidden_size = 100
   max_epoch = 4
   max_max_epoch = 13
   keep_prob = 1.0
   lr_decay = 0.5
-  batch_size = 20
-  vocab_size = 8000
+  batch_size = 10
+  vocab_size = 10000
   rnn_mode = BLOCK
 
 
@@ -490,21 +490,21 @@ def main(_):
                                                 config.init_scale)
 
     with tf.name_scope("Train"):
-      train_input = PTBInput(config=config, data=train_data[:config.vocab_size], name="TrainInput")
+      train_input = PTBInput(config=config, data=train_data, name="TrainInput")
       with tf.variable_scope("Model", reuse=None, initializer=initializer):
         m = PTBModel(is_training=True, config=config, input_=train_input)
       tf.summary.scalar("Training Loss", m.cost)
       tf.summary.scalar("Learning Rate", m.lr)
 
     with tf.name_scope("Valid"):
-      valid_input = PTBInput(config=config, data=valid_data[:config.vocab_size], name="ValidInput")
+      valid_input = PTBInput(config=config, data=valid_data, name="ValidInput")
       with tf.variable_scope("Model", reuse=True, initializer=initializer):
         mvalid = PTBModel(is_training=False, config=config, input_=valid_input)
       tf.summary.scalar("Validation Loss", mvalid.cost)
 
     with tf.name_scope("Test"):
       test_input = PTBInput(
-          config=eval_config, data=test_data[:config.vocab_size], name="TestInput")
+          config=eval_config, data=test_data, name="TestInput")
       with tf.variable_scope("Model", reuse=True, initializer=initializer):
         mtest = PTBModel(is_training=False, config=eval_config,
                          input_=test_input)
