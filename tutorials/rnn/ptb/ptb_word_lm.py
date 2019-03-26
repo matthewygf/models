@@ -525,7 +525,10 @@ def main(_):
     tf.train.import_meta_graph(metagraph)
     for model in models.values():
       model.import_ops()
-    stop_hook = tf.train.StopAtStepHook(last_step=config.max_max_epoch * config.num_steps)
+    data_len = len(train_data)
+    batch_len = data_len // config.batch_size
+    epoch_size = (batch_len - 1) // config.num_steps
+    stop_hook = tf.train.StopAtStepHook(last_step=config.max_max_epoch * epoch_size)
     # GPU Sharing stuff.
     tf.compat.v1.logging.info('GPU Memory fraction : %.3f' % FLAGS.gpu_memory_fraction)
     gpu_options = tf.compat.v1.GPUOptions(per_process_gpu_memory_fraction=FLAGS.gpu_memory_fraction)
