@@ -20,6 +20,12 @@ mobile_net_v1_025_cmd = ['python3', 'research/slim/train_image_classifier.py',
                          '--model_name', 'mobilenet_v1_025',
                          '--batch_size', '40',
                          ]
+mobile_net_v1_025_b48_cmd = ['python3', 'research/slim/train_image_classifier.py', 
+                         '--dataset_name', 'cifar10',
+                         '--dataset_dir', '/datasets/cifar10',
+                         '--model_name', 'mobilenet_v1_025',
+                         '--batch_size', '48',
+                         ]
 ptb_word_lm_cmd = ['python3', 'tutorials/rnn/ptb/ptb_word_lm.py',
                    '--data_path','/models/simple-examples/data/',
                    '--model','small',
@@ -27,7 +33,8 @@ ptb_word_lm_cmd = ['python3', 'tutorials/rnn/ptb/ptb_word_lm.py',
                   ]
 models_train = {
     'mobilenet_v2_035': mobile_net_v2_035_cmd,
-    'mobilenet_v1_025': mobile_net_v1_025_cmd,
+    'mobilenet_v1_025_batch_40': mobile_net_v1_025_cmd,
+    'mobilenet_v1_025_batch_48': mobile_net_v1_025_b48_cmd,
     'ptb_word_lm': ptb_word_lm_cmd
 }
 
@@ -167,7 +174,15 @@ def run(
     
 def main():
     # which one we should run in parallel
-    sets = [['ptb_word_lm'], ['ptb_word_lm', 'ptb_word_lm']]
+    sets = [
+            ['ptb_word_lm'], 
+            ['ptb_word_lm', 'ptb_word_lm'], 
+            ['mobilenet_v1_025_batch_40'], 
+            ['mobilenet_v1_025_batch_40', 'mobilenet_v1_025_batch_40'], 
+            ['mobilenet_v1_025_batch_48'], ['mobilenet_v1_025_batch_48']
+            ['mobilenet_v1_025_batch_40'], ['ptb_word_lm']
+            ['mobilenet_v1_025_batch_48'], ['ptb_word_lm']
+        ]
     project_dir = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
     experiment_path = os.path.join(project_dir, 'experiment')
     #nv_out_log = os.path.join(project_dir, 'nv_out.log')
