@@ -468,14 +468,15 @@ def get_config():
 def main(_):
   if not FLAGS.data_path:
     raise ValueError("Must set --data_path to PTB data directory")
-  gpus = [
-      x.name for x in device_lib.list_local_devices() if x.device_type == "GPU"
-  ]
-  if FLAGS.num_gpus > len(gpus):
-    raise ValueError(
-        "Your machine has only %d gpus "
-        "which is less than the requested --num_gpus=%d."
-        % (len(gpus), FLAGS.num_gpus))
+  # https://stackoverflow.com/questions/38559755/how-to-get-current-available-gpus-in-tensorflow/38580201#38580201
+  # gpus = [
+  #     x.name for x in device_lib.list_local_devices() if x.device_type == "GPU"
+  # ]
+  # if FLAGS.num_gpus > len(gpus):
+  #   raise ValueError(
+  #       "Your machine has only %d gpus "
+  #       "which is less than the requested --num_gpus=%d."
+  #       % (len(gpus), FLAGS.num_gpus))
 
   raw_data = reader.ptb_raw_data(FLAGS.data_path)
   train_data, valid_data, test_data, _ = raw_data
