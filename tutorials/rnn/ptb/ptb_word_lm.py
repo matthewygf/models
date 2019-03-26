@@ -533,6 +533,7 @@ def main(_):
     tf.compat.v1.logging.info('GPU Memory fraction : %.3f' % FLAGS.gpu_memory_fraction)
     gpu_options = tf.compat.v1.GPUOptions(per_process_gpu_memory_fraction=0.5)
     config_proto = tf.compat.v1.ConfigProto(gpu_options=gpu_options)
+    print(config_proto)
     with tf.compat.v1.train.MonitoredTrainingSession(
             checkpoint_dir=FLAGS.save_path,
             config=config_proto,
