@@ -346,7 +346,7 @@ class SmallConfig(object):
   max_max_epoch = 13
   keep_prob = 1.0
   lr_decay = 0.5
-  batch_size = 10
+  batch_size = 20
   vocab_size = 10000
   rnn_mode = BLOCK
 
@@ -525,14 +525,17 @@ def main(_):
     tf.train.import_meta_graph(metagraph)
     for model in models.values():
       model.import_ops()
-    sv = tf.train.Supervisor(logdir=FLAGS.save_path)
+    stop_hook = tf.train.StopAtStepHook(last_step=config.max_max_epoch * config.num_steps)
     # GPU Sharing stuff.
     gpu_options = tf.compat.v1.GPUOptions(per_process_gpu_memory_fraction=FLAGS.gpu_memory_fraction)
     config_proto = tf.compat.v1.ConfigProto(gpu_options=gpu_options,
                                             allow_soft_placement=soft_placement
                                            )
-    with sv.managed_session(config=config_proto) as session:
-      for i in range(config.max_max_epoch):
+    with tf.train.MonitoredTrainingSession(
+            checkpoint_dir=FLAGS.save_path,
+            config=config_proto,
+            hooks=[stop_hook]) as session:
+      while not session.should_stop():
         lr_decay = config.lr_decay ** max(i + 1 - config.max_epoch, 0.0)
         m.assign_lr(session, config.learning_rate * lr_decay)
 
@@ -545,11 +548,6 @@ def main(_):
 
       test_perplexity = run_epoch(session, mtest)
       print("Test Perplexity: %.3f" % test_perplexity)
-
-      if FLAGS.save_path:
-        print("Saving model to %s." % FLAGS.save_path)
-        sv.saver.save(session, FLAGS.save_path, global_step=sv.global_step)
-
 
 if __name__ == "__main__":
   tf.logging.set_verbosity(tf.logging.INFO)
