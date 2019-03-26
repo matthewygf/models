@@ -83,7 +83,7 @@ def ptb_raw_data(data_path=None):
   return train_data, valid_data, test_data, vocabulary
 
 
-def ptb_producer(raw_data, batch_size, num_steps, vocab_size, name=None):
+def ptb_producer(raw_data, batch_size, num_steps, name=None):
   """Iterate on the raw PTB data.
 
   This chunks up raw_data into batches of examples and returns Tensors that
@@ -105,7 +105,8 @@ def ptb_producer(raw_data, batch_size, num_steps, vocab_size, name=None):
   with tf.name_scope(name, "PTBProducer", [raw_data, batch_size, num_steps]):
     raw_data = tf.convert_to_tensor(raw_data, name="raw_data", dtype=tf.int32)
 
-    batch_len = vocab_size // batch_size
+    data_len = tf.size(raw_data)
+    batch_len = data_len // batch_size
     data = tf.reshape(raw_data[0 : batch_size * batch_len],
                       [batch_size, batch_len])
 
