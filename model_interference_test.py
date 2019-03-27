@@ -26,6 +26,11 @@ mobile_net_v1_025_b48_cmd = ['python3', 'research/slim/train_image_classifier.py
                          '--model_name', 'mobilenet_v1_025',
                          '--batch_size', '48',
                          ]
+nasnet_b32_cmd = ['python3', 'research/slim/train_image_classifier.py', 
+                         '--dataset_name', 'cifar10',
+                         '--dataset_dir', '/datasets/cifar10',
+                         '--model_name', 'nasnet_cifar',	
+                         '--batch_size', '32']
 ptb_word_lm_cmd = ['python3', 'tutorials/rnn/ptb/ptb_word_lm.py',
                    '--data_path','/models/simple-examples/data/',
                    '--model','small',
@@ -35,7 +40,8 @@ models_train = {
     'mobilenet_v2_035': mobile_net_v2_035_cmd,
     'mobilenet_v1_025_batch_40': mobile_net_v1_025_cmd,
     'mobilenet_v1_025_batch_48': mobile_net_v1_025_b48_cmd,
-    'ptb_word_lm': ptb_word_lm_cmd
+    'ptb_word_lm': ptb_word_lm_cmd,
+    'nasnet_batch_32': nasnet_b32_cmd
 }
 
 def process(line):
@@ -175,10 +181,9 @@ def run(
 def main():
     # which one we should run in parallel
     sets = [
-            ['ptb_word_lm'], 
-            ['ptb_word_lm', 'ptb_word_lm'], 
-            ['mobilenet_v1_025_batch_40', 'ptb_word_lm'],
-            ['mobilenet_v1_025_batch_48', 'ptb_word_lm']
+            ['nasnet_batch_32'], 
+            ['nasnet_batch_32', 'ptb_word_lm'], 
+            ['nasnet_batch_32', 'nasnet_batch_32']
            ]
     project_dir = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
     experiment_path = os.path.join(project_dir, 'experiment')
