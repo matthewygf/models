@@ -177,12 +177,9 @@ def main():
     sets = [
             ['ptb_word_lm'], 
             ['ptb_word_lm', 'ptb_word_lm'], 
-            ['mobilenet_v1_025_batch_40'], 
-            ['mobilenet_v1_025_batch_40', 'mobilenet_v1_025_batch_40'], 
-            ['mobilenet_v1_025_batch_48', 'mobilenet_v1_025_batch_48']
-            ['mobilenet_v1_025_batch_40', 'ptb_word_lm']
+            ['mobilenet_v1_025_batch_40', 'ptb_word_lm'],
             ['mobilenet_v1_025_batch_48', 'ptb_word_lm']
-        ]
+           ]
     project_dir = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
     experiment_path = os.path.join(project_dir, 'experiment')
     #nv_out_log = os.path.join(project_dir, 'nv_out.log')
