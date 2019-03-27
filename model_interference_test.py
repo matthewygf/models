@@ -26,11 +26,16 @@ mobile_net_v1_025_b48_cmd = ['python3', 'research/slim/train_image_classifier.py
                          '--model_name', 'mobilenet_v1_025',
                          '--batch_size', '48',
                          ]
-nasnet_b32_cmd = ['python3', 'research/slim/train_image_classifier.py', 
+nasnet_b8_cmd = ['python3', 'research/slim/train_image_classifier.py', 
                          '--dataset_name', 'cifar10',
                          '--dataset_dir', '/datasets/cifar10',
                          '--model_name', 'nasnet_cifar',	
-                         '--batch_size', '32']
+                         '--batch_size', '8']
+resnet_50_b8_cmd = ['python3', 'research/slim/train_image_classifier.py', 
+                         '--dataset_name', 'cifar10',
+                         '--dataset_dir', '/datasets/cifar10',
+                         '--model_name', 'resnet_v2_50',	
+                         '--batch_size', '8']
 ptb_word_lm_cmd = ['python3', 'tutorials/rnn/ptb/ptb_word_lm.py',
                    '--data_path','/models/simple-examples/data/',
                    '--model','small',
@@ -41,7 +46,8 @@ models_train = {
     'mobilenet_v1_025_batch_40': mobile_net_v1_025_cmd,
     'mobilenet_v1_025_batch_48': mobile_net_v1_025_b48_cmd,
     'ptb_word_lm': ptb_word_lm_cmd,
-    'nasnet_batch_32': nasnet_b32_cmd
+    'nasnet_batch_8': nasnet_b8_cmd,
+    'resnet_50_batch8_cmd': resnet_50_b8_cmd
 }
 
 def process(line):
@@ -181,9 +187,9 @@ def run(
 def main():
     # which one we should run in parallel
     sets = [
-            ['nasnet_batch_32'], 
-            ['nasnet_batch_32', 'ptb_word_lm'], 
-            ['nasnet_batch_32', 'nasnet_batch_32']
+            ['resnet_50_batch8_cmd'], 
+            ['resnet_50_batch8_cmd', 'ptb_word_lm'], 
+            ['resnet_50_batch8_cmd', 'resnet_50_batch8_cmd']
            ]
     project_dir = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
     experiment_path = os.path.join(project_dir, 'experiment')
