@@ -36,6 +36,12 @@ resnet_50_b8_cmd = ['python3', 'research/slim/train_image_classifier.py',
                          '--dataset_dir', '/datasets/cifar10',
                          '--model_name', 'resnet_v2_50',	
                          '--batch_size', '8']
+resnet_v1_50_32_cmd = ['python3', 'research/slim/train_image_classifier.py',
+                    '--dataset_name', 'imagenet',
+                    '--dataset_dir', '/datasets/ILSVRC2012',
+                    '--model_name', 'resnet_v1_50',
+                    '--train_dir', '/datasets/train/resnet_v1_50'
+                    '--batch_size', '32']
 ptb_word_lm_cmd = ['python3', 'tutorials/rnn/ptb/ptb_word_lm.py',
                    '--data_path','/models/simple-examples/data/',
                    '--model','small',
@@ -47,7 +53,8 @@ models_train = {
     'mobilenet_v1_025_batch_48': mobile_net_v1_025_b48_cmd,
     'ptb_word_lm': ptb_word_lm_cmd,
     'nasnet_batch_8': nasnet_b8_cmd,
-    'resnet_50_batch8_cmd': resnet_50_b8_cmd
+    'resnet_50_batch8_cmd': resnet_50_b8_cmd,
+    'resnet_v1_50_32': resnet_v1_50_32_cmd
 }
 
 def process(line):
@@ -139,6 +146,7 @@ def run(
                 for i,(p, err, out, start_time, path, tracker) in enumerate(zip(processes_list, err_logs, out_logs, start_times, err_file_paths, trackers)):
                     poll = None
                     pid = p.pid
+                    poll = p.poll()
                     if poll is None:
                         print('Process %d still running' % pid)
                     current_time = time.time()
@@ -187,27 +195,18 @@ def run(
 def main():
     # which one we should run in parallel
     sets = [
-            ['resnet_50_batch8_cmd'], 
-            ['resnet_50_batch8_cmd', 'ptb_word_lm'], 
-            ['resnet_50_batch8_cmd', 'resnet_50_batch8_cmd']
+            ['resnet_v1_50_32'], 
+            #['resnet_50_batch8_cmd', 'ptb_word_lm'], 
+            #['resnet_50_batch8_cmd', 'resnet_50_batch8_cmd']
            ]
     project_dir = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
     experiment_path = os.path.join(project_dir, 'experiment')
-    #nv_out_log = os.path.join(project_dir, 'nv_out.log')
-    #nv_err_log = os.path.join(project_dir, 'nv_out.log')
-    #nv_err = open(nv_err_log, 'w+')
-    #nv_out = open(nv_out_log, 'w+')
-    #nvprof_p = subprocess.Popen(['nvprof', '--profile-all-process', '--profile-child-processes', '--log-file', '/models/nvprof.log'], stdout=nv_out, stderr=nv_err)
 
     for experiment_index, ex in enumerate(sets):
         current_experiment_path = os.path.join(experiment_path, str(experiment_index))
         experiment_file = os.path.join(experiment_path, 'experiment.log')
 
         run(experiment_file, current_experiment_path, ex, len(sets), experiment_index)
-    #nvprof_p.terminate()
-    #nv_err.close()
-    #nv_out.close()        
-
 if __name__ == "__main__":
     main()
         

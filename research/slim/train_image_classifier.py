@@ -602,20 +602,21 @@ def main(_):
     ###########################
     # Kicks off the training. #
     ###########################
-    slim.learning.train(
-        train_tensor,
-        logdir=FLAGS.train_dir,
-        master=FLAGS.master,
-        is_chief=(FLAGS.task == 0),
-        init_fn=_get_init_fn(),
-        local_init_op=init_train_op,
-        summary_op=summary_op,
-        session_config=config_proto,
-        number_of_steps=FLAGS.max_number_of_steps,
-        log_every_n_steps=FLAGS.log_every_n_steps,
-        save_summaries_secs=FLAGS.save_summaries_secs,
-        save_interval_secs=FLAGS.save_interval_secs,
-        sync_optimizer=optimizer if FLAGS.sync_replicas else None)
+    with tf.contrib.tfprof.ProfileContext(FLAGS.train_dir+'/profile') as pctx:
+      slim.learning.train(
+          train_tensor,
+          logdir=FLAGS.train_dir,
+          master=FLAGS.master,
+          is_chief=(FLAGS.task == 0),
+          init_fn=_get_init_fn(),
+          local_init_op=init_train_op,
+          summary_op=summary_op,
+          session_config=config_proto,
+          number_of_steps=FLAGS.max_number_of_steps,
+          log_every_n_steps=FLAGS.log_every_n_steps,
+          save_summaries_secs=FLAGS.save_summaries_secs,
+          save_interval_secs=FLAGS.save_interval_secs,
+          sync_optimizer=optimizer if FLAGS.sync_replicas else None)
 
 
 if __name__ == '__main__':
