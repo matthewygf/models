@@ -75,7 +75,7 @@ def get_average_num_step(file_path):
             mean = (mean + float(time_elapsed)) / num
     return (num, mean)
 
-def create_process(model_name, index, experiment_path, percent=0.99):
+def create_process(model_name, index, experiment_path, percent=0.0):
     execution_id = datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S-%f')
     output_dir = os.path.join(experiment_path, execution_id+model_name+str(index))
     output_file = os.path.join(output_dir, 'output.log') 
@@ -91,7 +91,11 @@ def create_process(model_name, index, experiment_path, percent=0.99):
     out = open(output_file, 'w+')
     cmd = models_train[model_name]
     train_dir_path = '--train_dir' if 'word' not in model_name else '--save_path' 
-    cmd += [train_dir_path, train_dir, '--gpu_memory_fraction', str(percent)]
+    cmd += [train_dir_path, train_dir]
+    if percent > 0.0:
+        gpu_mem_opts = ['--gpu_memory_fraction', str(percent)] 
+        cmd += gpu_mem_opts
+
     p = subprocess.Popen(cmd, stdout=out, stderr=err)
     return (p, out, err, err_out_file, output_dir)
 
@@ -107,7 +111,7 @@ def run(
     mean_time_p_steps = np.zeros(len(experiment_set), dtype=float)
     accumulated_models = np.zeros(len(experiment_set), dtype=float)
 
-    for experiment_run in range(1, 6):
+    for experiment_run in range(1, 2):
         if os.path.exists(average_log):
             average_file = open(average_log, mode='a+')
         else:
@@ -119,7 +123,9 @@ def run(
         start_times = []
         trackers = []
         ids = {}
-        percent = (1 / len(experiment_set)) - 0.075 # some overhead of cuda stuff i think :/
+        percent = 0.0
+        if len(experiment_set) > 1:
+            percent = (1 / len(experiment_set)) - 0.075 # some overhead of cuda stuff i think :/
         for i, m in enumerate(experiment_set):
             start_time = time.time()
             p, out, err, path, out_dir = create_process(m, i, experiment_path, percent)
@@ -151,7 +157,7 @@ def run(
                     current_time = time.time()
                     executed = current_time - start_time
                     print("checking the time, process %d been running for %d " % (pid,executed))
-                    if executed >= 60.0 * 5:
+                    if executed >= 60.0 * 6:
                         p.kill()
                         err.close()
                         out.close()

@@ -232,9 +232,13 @@ tf.app.flags.DEFINE_boolean(
 #####################
 # Custom GPU Config Flags #
 #####################
+tf.app.flags.DEFINE_bool(
+    'allow_growth', True,
+    'ONLY USE ALLOW GROWTH, when you not specify gpu memory fraction'
+)
 
 tf.app.flags.DEFINE_float(
-    'gpu_memory_fraction', 0.99,
+    'gpu_memory_fraction', None,
     'value from 0 to 1, if less than 0 than will error of course :P'
 )
 
@@ -593,7 +597,11 @@ def main(_):
     init_train_op = tf.group(init_iterator_op, global_init_op, local_init_op, table_init_op)
 
     # GPU Sharing stuff.
-    gpu_options = tf.compat.v1.GPUOptions(per_process_gpu_memory_fraction=FLAGS.gpu_memory_fraction)
+    if FLAGS.gpu_memory_fraction is not None:
+      gpu_options = tf.compat.v1.GPUOptions(per_process_gpu_memory_fraction=FLAGS.gpu_memory_fraction)
+    else:
+      gpu_options = tf.compat.v1.GPUOptions(allow_growth=FLAGS.allow_growth)
+      
     config_proto = tf.compat.v1.ConfigProto(gpu_options=gpu_options)
 
     ###########################
