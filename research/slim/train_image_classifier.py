@@ -597,11 +597,11 @@ def main(_):
     init_train_op = tf.group(init_iterator_op, global_init_op, local_init_op, table_init_op)
 
     # GPU Sharing stuff.
-    if FLAGS.gpu_memory_fraction is not None:
+    if not FLAGS.allow_growth:
       gpu_options = tf.compat.v1.GPUOptions(per_process_gpu_memory_fraction=FLAGS.gpu_memory_fraction)
     else:
       gpu_options = tf.compat.v1.GPUOptions(allow_growth=FLAGS.allow_growth)
-      
+
     config_proto = tf.compat.v1.ConfigProto(gpu_options=gpu_options)
 
     ###########################
