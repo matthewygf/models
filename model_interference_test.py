@@ -36,11 +36,11 @@ resnet_50_b8_cmd = ['python3', 'research/slim/train_image_classifier.py',
                          '--dataset_dir', '/datasets/cifar10',
                          '--model_name', 'resnet_v2_50',	
                          '--batch_size', '8']
-resnet_v1_50_32_cmd = ['python3', 'research/slim/train_image_classifier.py',
+resnet_v1_50_16_cmd = ['python3', 'research/slim/train_image_classifier.py',
                     '--dataset_name', 'imagenet',
                     '--dataset_dir', '/datasets/ILSVRC2012',
                     '--model_name', 'resnet_v1_50',
-                    '--batch_size', '32']
+                    '--batch_size', '16']
 ptb_word_lm_cmd = ['python3', 'tutorials/rnn/ptb/ptb_word_lm.py',
                    '--data_path','/models/simple-examples/data/',
                    '--model','small',
