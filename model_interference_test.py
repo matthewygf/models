@@ -123,9 +123,7 @@ def run(
         start_times = []
         trackers = []
         ids = {}
-        percent = 0.0
-        if len(experiment_set) > 1:
-            percent = (1 / len(experiment_set)) - 0.075 # some overhead of cuda stuff i think :/
+        percent = (1 / len(experiment_set)) - 0.075 # some overhead of cuda stuff i think :/
         for i, m in enumerate(experiment_set):
             start_time = time.time()
             p, out, err, path, out_dir = create_process(m, i, experiment_path, percent)
