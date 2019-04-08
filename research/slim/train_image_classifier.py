@@ -412,6 +412,18 @@ def main(_):
     raise ValueError('You must supply the dataset directory with --dataset_dir')
 
   tf.logging.set_verbosity(tf.logging.INFO)
+
+  
+  # GPU Sharing stuff.
+  if not FLAGS.allow_growth:
+    tf.compat.v1.logging.info("SET MEMORY FRACTION TO %.2f" % FLAGS.gpu_memory_fraction)
+    tf.compat.v1.config.gpu.set_gpu_per_process_memory_fraction(FLAGS.gpu_memory_fraction)
+    # gpu_options = tf.compat.v1.GPUOptions(per_process_gpu_memory_fraction=FLAGS.gpu_memory_fraction)
+    # config_proto = tf.compat.v1.ConfigProto(gpu_options=gpu_options)
+  else:
+    tf.compat.v1.logging.info("GPU ALLOW GROWTH")
+    tf.compat.v1.config.gpu.set_gpu_per_process_memory_growth(True)
+
   with tf.Graph().as_default():
     #######################
     # Config model_deploy #
@@ -596,17 +608,6 @@ def main(_):
     table_init_op = tf.initializers.tables_initializer(name='init_all_tables')
     init_train_op = tf.group(init_iterator_op, global_init_op, local_init_op, table_init_op)
 
-    # GPU Sharing stuff.
-    if not FLAGS.allow_growth:
-      tf.compat.v1.logging.info("SET MEMORY FRACTION TO %.2f" % FLAGS.gpu_memory_fraction)
-      gpu_options = tf.compat.v1.GPUOptions(per_process_gpu_memory_fraction=FLAGS.gpu_memory_fraction)
-      config_proto = tf.compat.v1.ConfigProto(gpu_options=gpu_options)
-    else:
-      tf.compat.v1.logging.info("GPU OPTIONS ALLOW GROWTH !")
-      config_proto = tf.compat.v1.ConfigProto()
-      config_proto.gpu_options.allow_growth = True
-
-
     ###########################
     # Kicks off the training. #
     ###########################
@@ -620,7 +621,6 @@ def main(_):
           init_fn=_get_init_fn(),
           local_init_op=init_train_op,
           summary_op=summary_op,
-          session_config=config_proto,
           number_of_steps=FLAGS.max_number_of_steps,
           log_every_n_steps=FLAGS.log_every_n_steps,
           save_summaries_secs=FLAGS.save_summaries_secs,
