@@ -600,11 +600,12 @@ def main(_):
     if not FLAGS.allow_growth:
       tf.compat.v1.logging.info("SET MEMORY FRACTION TO %.2f" % FLAGS.gpu_memory_fraction)
       gpu_options = tf.compat.v1.GPUOptions(per_process_gpu_memory_fraction=FLAGS.gpu_memory_fraction)
+      config_proto = tf.compat.v1.ConfigProto(gpu_options=gpu_options)
     else:
       tf.compat.v1.logging.info("GPU OPTIONS ALLOW GROWTH !")
-      gpu_options = tf.compat.v1.GPUOptions(allow_growth=True)
+      config_proto = tf.compat.v1.ConfigProto()
+      config_proto.gpu_options.allow_growth = True
 
-    config_proto = tf.compat.v1.ConfigProto(gpu_options=gpu_options)
 
     ###########################
     # Kicks off the training. #
