@@ -602,7 +602,7 @@ def main(_):
       gpu_options = tf.compat.v1.GPUOptions(per_process_gpu_memory_fraction=FLAGS.gpu_memory_fraction)
     else:
       tf.compat.v1.logging.info("GPU OPTIONS ALLOW GROWTH !")
-      gpu_options = tf.compat.v1.GPUOptions(allow_growth=FLAGS.allow_growth)
+      gpu_options = tf.compat.v1.GPUOptions(allow_growth=True)
 
     config_proto = tf.compat.v1.ConfigProto(gpu_options=gpu_options)
 
