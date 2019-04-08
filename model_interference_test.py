@@ -40,7 +40,6 @@ resnet_v1_50_32_cmd = ['python3', 'research/slim/train_image_classifier.py',
                     '--dataset_name', 'imagenet',
                     '--dataset_dir', '/datasets/ILSVRC2012',
                     '--model_name', 'resnet_v1_50',
-                    '--train_dir', '/datasets/train/resnet_v1_50'
                     '--batch_size', '32']
 ptb_word_lm_cmd = ['python3', 'tutorials/rnn/ptb/ptb_word_lm.py',
                    '--data_path','/models/simple-examples/data/',

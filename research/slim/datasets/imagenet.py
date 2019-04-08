@@ -152,6 +152,8 @@ def parse_fn(data):
     # [1, num_boxes, coords].
     bbox = tf.expand_dims(bbox, 0)
     bbox = tf.transpose(a=bbox, perm=[0, 2, 1])
+    # seems to be the case for resnetv1
+    image = tf.transpose(image, perm=[2, 1, 0])
 
     object_label = tf.sparse.to_dense(parsed['image/object/class/label'])
     return image, label, bbox
