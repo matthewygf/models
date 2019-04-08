@@ -234,7 +234,7 @@ tf.app.flags.DEFINE_boolean(
 #####################
 
 tf.app.flags.DEFINE_float(
-    'gpu_memory_fraction', 0.99,
+    'gpu_memory_fraction', 0.98,
     'value from 0 to 1, if less than 0 than will error of course :P'
 )
 
