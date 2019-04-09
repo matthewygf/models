@@ -217,11 +217,10 @@ def run(
         should_stop = False
         sys_tracker = sys_track.SystemInfoTracker(experiment_path)
 
-        smi_file_path = os.path.join(experiment_path, 'smi.log') 
-        smi_file = open(smi_file_path, 'a+')
-        smi_p = subprocess.Popen(nvidia_smi_cmd, stdout=smi_file, stderr=smi_file)
-
         try:
+            smi_file_path = os.path.join(experiment_path, 'smi.log') 
+            smi_file = open(smi_file_path, 'a+')
+            smi_p = subprocess.Popen(nvidia_smi_cmd, stdout=smi_file, stderr=smi_file)
             sys_tracker.start()
             while not should_stop:
                 time.sleep(5)
@@ -267,10 +266,11 @@ def run(
                 err.close()
                 out.close()
                 print('%d killed ! ! !' % pid)
+            smi_p.kill()
+            smi_file.close()
+
         average_file.close()
         sys_tracker.stop()
-        smi_p.kill()
-        smi_file.close()
 
     # Experiment average size.
     average_file = open(average_log, mode='a+')
