@@ -276,7 +276,7 @@ def main():
             ['mobilenet_v1_025_batch_32'], 
             ['resnet_v1_50_batch_32'], 
             ['resnet_101_v1_batch_32'],
-            ['resnet_151_v1_batch_32']
+            ['resnet_151_v1_batch_32'],
             ['vgg19_batch_32'], 
             ['vgg16_batch_32'],
             ['alexnet_v2_batch_32'],
