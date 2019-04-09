@@ -297,19 +297,20 @@ def run(
 def main():
     # which one we should run in parallel
     sets = [
-            ['mobilenet_v1_025_batch_32'],
-            ['mobilenet_v1_025_batch_32', 'mobilenet_v1_025_batch_32'],
-            ['mobilenet_v1_025_batch_32', 'mobilenet_v1_025_batch_32', 'mobilenet_v1_025_batch_32', 'mobilenet_v1_025_batch_32'],
-            ['resnet_v1_50_batch_8'], 
-            ['resnet_v1_50_batch_8', 'resnet_v1_50_batch_8'],
-            ['resnet_v1_50_batch_8', 'ptb_word_lm'],
+            # ['mobilenet_v1_025_batch_32'],
+            # ['mobilenet_v1_025_batch_32', 'mobilenet_v1_025_batch_32'],
+            # ['mobilenet_v1_025_batch_32', 'mobilenet_v1_025_batch_32', 'mobilenet_v1_025_batch_32', 'mobilenet_v1_025_batch_32'],
+            # ['resnet_v1_50_batch_8'], 
+            # ['resnet_v1_50_batch_8', 'resnet_v1_50_batch_8'],
+            # ['resnet_v1_50_batch_8', 'ptb_word_lm'],
             ['ptb_word_lm'],
             ['ptb_word_lm', 'ptb_word_lm'],
             ['ptb_word_lm', 'mobilenet_v1_025_batch_32'],
+            ['ptb_word_lm', 'mobilenet_v1_025_batch_32', 'mobilenet_v1_025_batch_32']
             ['inceptionv1_batch_8'],
-            ['inceptionv1_batch_8','inceptionv1_batch_8'],
-            ['resnet_v1_50_batch_8', 'inceptionv1_batch_8'], 
-            ['inceptionv1_batch_8', 'ptb_word_lm']
+            # ['inceptionv1_batch_8','inceptionv1_batch_8'],
+            # ['resnet_v1_50_batch_8', 'inceptionv1_batch_8'], 
+            # ['inceptionv1_batch_8', 'ptb_word_lm']
             # ['resnet_101_v1_batch_8'],
             # ['resnet_151_v1_batch_8'],
             # ['vgg19_batch_8'], 
