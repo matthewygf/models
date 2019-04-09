@@ -25,6 +25,7 @@ import tensorflow as tf  # pylint: disable=g-bad-import-order
 from official.resnet import imagenet_main
 from official.resnet.keras import keras_common
 from official.resnet.keras import resnet_model
+from official.resnet.keras import trivial_model
 from official.utils.flags import core as flags_core
 from official.utils.logs import logger
 from official.utils.misc import distribution_utils
@@ -118,6 +119,13 @@ def run(flags_obj):
                    if tf.test.is_built_with_cuda() else 'channels_last')
   tf.keras.backend.set_image_data_format(data_format)
 
+  strategy = distribution_utils.get_distribution_strategy(
+      distribution_strategy=flags_obj.distribution_strategy,
+      num_gpus=flags_obj.num_gpus,
+      num_workers=distribution_utils.configure_cluster())
+
+  strategy_scope = distribution_utils.get_strategy_scope(strategy)
+
   # pylint: disable=protected-access
   if flags_obj.use_synthetic_data:
     distribution_utils.set_up_synthetic_data()
@@ -150,13 +158,6 @@ def run(flags_obj):
         parse_record_fn=parse_record_keras,
         dtype=dtype)
 
-  strategy = distribution_utils.get_distribution_strategy(
-      distribution_strategy=flags_obj.distribution_strategy,
-      num_gpus=flags_obj.num_gpus,
-      num_workers=distribution_utils.configure_cluster())
-
-  strategy_scope = keras_common.get_strategy_scope(strategy)
-
   with strategy_scope:
     optimizer = keras_common.get_optimizer()
     if dtype == 'float16':
@@ -164,14 +165,18 @@ def run(flags_obj):
       # can be enabled with a single line of code.
       optimizer = tf.keras.mixed_precision.experimental.LossScaleOptimizer(
           optimizer, loss_scale=flags_core.get_loss_scale(flags_obj))
-    model = resnet_model.resnet50(num_classes=imagenet_main.NUM_CLASSES,
-                                  dtype=dtype)
+
+    if flags_obj.use_trivial_model:
+      model = trivial_model.trivial_model(imagenet_main.NUM_CLASSES)
+    else:
+      model = resnet_model.resnet50(num_classes=imagenet_main.NUM_CLASSES,
+                                    dtype=dtype)
 
     model.compile(loss='sparse_categorical_crossentropy',
                   optimizer=optimizer,
                   metrics=['sparse_categorical_accuracy'])
 
-  time_callback, tensorboard_callback, lr_callback = keras_common.get_callbacks(
+  callbacks = keras_common.get_callbacks(
       learning_rate_schedule, imagenet_main.NUM_IMAGES['train'])
 
   train_steps = imagenet_main.NUM_IMAGES['train'] // flags_obj.batch_size
@@ -196,11 +201,7 @@ def run(flags_obj):
   history = model.fit(train_input_dataset,
                       epochs=train_epochs,
                       steps_per_epoch=train_steps,
-                      callbacks=[
-                          time_callback,
-                          lr_callback,
-                          tensorboard_callback
-                      ],
+                      callbacks=callbacks,
                       validation_steps=num_eval_steps,
                       validation_data=validation_data,
                       validation_freq=flags_obj.epochs_between_evals,
@@ -211,7 +212,7 @@ def run(flags_obj):
     eval_output = model.evaluate(eval_input_dataset,
                                  steps=num_eval_steps,
                                  verbose=2)
-  stats = keras_common.build_stats(history, eval_output, time_callback)
+  stats = keras_common.build_stats(history, eval_output, callbacks)
   return stats
 
 
@@ -223,6 +224,6 @@ def main(_):
 
 if __name__ == '__main__':
   tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.INFO)
-  imagenet_main.define_imagenet_flags()
+  imagenet_main.define_imagenet_flags(dynamic_loss_scale=True)
   keras_common.define_keras_flags()
   absl_app.run(main)

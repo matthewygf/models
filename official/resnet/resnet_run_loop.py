@@ -83,6 +83,11 @@ def process_record_dataset(dataset,
     tf.compat.v1.logging.info('datasets_num_private_threads: %s',
                               datasets_num_private_threads)
 
+  # Disable intra-op parallelism to optimize for throughput instead of latency.
+  options = tf.data.Options()
+  options.experimental_threading.max_intra_op_parallelism = 1
+  dataset = dataset.with_options(options)
+
   # Prefetches a batch at a time to smooth out the time taken to load input
   # files for shuffling and processing.
   dataset = dataset.prefetch(buffer_size=batch_size)
@@ -94,12 +99,10 @@ def process_record_dataset(dataset,
   dataset = dataset.repeat(num_epochs)
 
   # Parses the raw records into images and labels.
-  dataset = dataset.apply(
-      tf.data.experimental.map_and_batch(
-          lambda value: parse_record_fn(value, is_training, dtype),
-          batch_size=batch_size,
-          num_parallel_batches=num_parallel_batches,
-          drop_remainder=False))
+  dataset = dataset.map(
+      lambda value: parse_record_fn(value, is_training, dtype),
+      num_parallel_calls=tf.data.experimental.AUTOTUNE)
+  dataset = dataset.batch(batch_size, drop_remainder=False)
 
   # Operations between the final prefetch and the get_next call to the iterator
   # will happen synchronously during run time. We prefetch here again to
@@ -550,17 +553,13 @@ def resnet_main(
 
   # Creates a `RunConfig` that checkpoints every 24 hours which essentially
   # results in checkpoints determined only by `epochs_between_evals`.
-  # TODO(ayushd,yuefengz): re-enable checkpointing for multi-worker strategy.
-  save_checkpoints_secs = (None if distribution_strategy.__class__.__name__ in
-                           ['CollectiveAllReduceStrategy',
-                            'MultiWorkerMirroredStrategy'] else 60*60*24)
-  tf.compat.v1.logging.info("distribution strategy: %s" % str(distribution_strategy.__class__.__name__))
   run_config = tf.estimator.RunConfig(
       train_distribute=distribution_strategy,
       session_config=session_config,
-      save_checkpoints_secs=save_checkpoints_secs,
+      save_checkpoints_secs=60*60*24,
       save_checkpoints_steps=None)
-
+  tf.compat.v1.logging.info("distribution strategy: %s" % str(distribution_strategy.__class__.__name__))
+  
   # Initializes model with all but the dense layer from pretrained ResNet.
   if flags_obj.pretrained_model_checkpoint_path is not None:
     warm_start_settings = tf.estimator.WarmStartSettings(
@@ -578,7 +577,8 @@ def resnet_main(
           'resnet_version': int(flags_obj.resnet_version),
           'loss_scale': flags_core.get_loss_scale(flags_obj),
           'dtype': flags_core.get_tf_dtype(flags_obj),
-          'fine_tune': flags_obj.fine_tune
+          'fine_tune': flags_obj.fine_tune,
+          'num_workers': num_workers,
       })
 
   run_params = {
@@ -588,6 +588,7 @@ def resnet_main(
       'resnet_version': flags_obj.resnet_version,
       'synthetic_data': flags_obj.use_synthetic_data,
       'train_epochs': flags_obj.train_epochs,
+      'num_workers': num_workers,
   }
   if flags_obj.use_synthetic_data:
     dataset_name = dataset_name + '-synthetic'
@@ -707,13 +708,14 @@ def resnet_main(
   return stats
 
 
-def define_resnet_flags(resnet_size_choices=None):
+def define_resnet_flags(resnet_size_choices=None, dynamic_loss_scale=False):
   """Add flags and validators for ResNet."""
   flags_core.define_base()
   flags_core.define_performance(num_parallel_calls=False,
                                 tf_gpu_thread_mode=True,
                                 datasets_num_private_threads=True,
-                                datasets_num_parallel_batches=True)
+                                datasets_num_parallel_batches=True,
+                                dynamic_loss_scale=dynamic_loss_scale)
   flags_core.define_image()
   flags_core.define_benchmark()
   flags.adopt_module_key_flags(flags_core)
