@@ -131,7 +131,7 @@ models_train = {
     'resnet_151_v1_batch_32': resnet_152_v1_b32_cmd
 }
 
-nvidia_smi_cmd = ['watch', '-n', '0.2', 'nvidia-smi', '--query-gpu=utilization.memory', '--format=csv']
+nvidia_smi_cmd = ['watch', '-n', '0.2', 'nvidia-smi', '--query-gpu=utilization.memory', '--format=csv', '|', 'tee', '-a']
 
 def process(line):
     # assuming slim learning
@@ -220,6 +220,7 @@ def run(
         try:
             smi_file_path = os.path.join(experiment_path, 'smi.log') 
             smi_file = open(smi_file_path, 'a+')
+            nvidia_smi_cmd += [experiment_path+'/smi_watch.log']
             smi_p = subprocess.Popen(nvidia_smi_cmd, stdout=smi_file, stderr=smi_file)
             sys_tracker.start()
             while not should_stop:
