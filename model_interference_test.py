@@ -218,7 +218,7 @@ def run(
         try:
             smi_file_path = os.path.join(experiment_path, 'smi.log') 
             smi_file = open(smi_file_path, 'a+')
-            nvidia_smi_cmd = ['watch', '-n', '0.2', 'nvidia-smi', '--query-gpu=utilization.memory', '--format=csv', '|', 'tee', '-a' , experiment_path+'/smi_watch.log']
+            nvidia_smi_cmd = ['watch', '-n', '0.2', 'nvidia-smi', '--query-gpu=utilization.gpu,utilization.memory,power.draw', '--format=csv', '|', 'tee', '-a' , experiment_path+'/smi_watch.log']
             smi_p = subprocess.Popen(nvidia_smi_cmd, stdout=smi_file, stderr=smi_file)
             sys_tracker.start()
             while not should_stop:
@@ -273,8 +273,11 @@ def run(
                 err.close()
                 out.close()
                 print('%d killed ! ! !' % pid)
+        finally:
+            if smi_p.poll is None:
+                smi_p.kill()
+                smi_file.close()
             
-
         average_file.close()
         sys_tracker.stop()
 
