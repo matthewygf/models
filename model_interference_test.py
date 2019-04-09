@@ -131,7 +131,7 @@ models_train = {
     'resnet_151_v1_batch_32': resnet_152_v1_b32_cmd
 }
 
-nvidia_smi_cmd = ['watch', '-n', '0.2', 'nvidia-smi', '--query-gpu', 'memory.used', '--format', 'csv']
+nvidia_smi_cmd = ['watch', '-n', '0.2', 'nvidia-smi', '--query-gpu=memory.used', '--format=csv']
 
 def process(line):
     # assuming slim learning
