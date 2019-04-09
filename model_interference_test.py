@@ -53,7 +53,7 @@ models_train = {
     'ptb_word_lm': ptb_word_lm_cmd,
     'nasnet_batch_8': nasnet_b8_cmd,
     'resnet_50_batch8_cmd': resnet_50_b8_cmd,
-    'resnet_v1_50_32': resnet_v1_50_32_cmd
+    'resnet_v1_50_32': resnet_v1_50_16_cmd
 }
 
 def process(line):
@@ -198,7 +198,7 @@ def run(
 def main():
     # which one we should run in parallel
     sets = [
-            ['resnet_v1_50_32'], 
+            ['mobile_net_v1_025_b48_cmd'], 
             #['resnet_50_batch8_cmd', 'ptb_word_lm'], 
             #['resnet_50_batch8_cmd', 'resnet_50_batch8_cmd']
            ]

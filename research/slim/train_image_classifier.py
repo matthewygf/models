@@ -463,7 +463,7 @@ def main(_):
       dataset = dataset.shuffle(buffer_size=FLAGS.batch_size*2)
       dataset = dataset.batch(FLAGS.batch_size)
       # apparently distributionStrategies will adjust how many batches to fetch
-      #dataset = dataset.prefetch(buffer_size=tf.data.experimental.AUTOTUNE)
+      dataset = dataset.prefetch(buffer_size=tf.data.experimental.AUTOTUNE)
       
     iterator = tf.data.Iterator.from_structure(
       dataset.output_types, dataset.output_shapes
