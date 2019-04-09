@@ -198,7 +198,7 @@ def run(
 def main():
     # which one we should run in parallel
     sets = [
-            ['mobile_net_v1_025_b48_cmd'], 
+            ['mobilenet_v1_025_batch_48'], 
             #['resnet_50_batch8_cmd', 'ptb_word_lm'], 
             #['resnet_50_batch8_cmd', 'resnet_50_batch8_cmd']
            ]
