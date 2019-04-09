@@ -144,10 +144,11 @@ def get_average_num_step(file_path):
     mean = 0.0
     with open(file_path, 'r') as f:
         for line in f:
-            mean = mean * num
-            time_elapsed = process(line)
-            num += 1
-            mean = (mean + float(time_elapsed)) / num
+            if 'sec/step' in line:
+                mean = mean * num
+                time_elapsed = process(line)
+                num += 1
+                mean = (mean + float(time_elapsed)) / num
     return (num, mean)
 
 def create_process(model_name, index, experiment_path, percent=0.0):
