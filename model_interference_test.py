@@ -257,17 +257,24 @@ def run(
                         line = ("experiment set %d, experiment_run %d: %d process average num p step is %.4f and total number of step is: %d \n" % 
                                     (experiment_index, experiment_run, pid, mean, num))
                         average_file.write(line)
-                        
+
+                smi_poll = None
+                smi_poll = smi_p.poll()
+                if smi_poll is None:
+                    print('NVIDIA_SMI Process %d still running' % smi_p.pid)
+
             print('total experiments: %d, experiment_run %d , finished %d' % (total_length-1, experiment_run, experiment_index))
+
         except KeyboardInterrupt:
+            smi_p.kill()
+            smi_file.close()
             for p, err, out in zip(processes_list, err_logs, out_logs):
                 pid = p.pid
                 p.kill()
                 err.close()
                 out.close()
                 print('%d killed ! ! !' % pid)
-            smi_p.kill()
-            smi_file.close()
+            
 
         average_file.close()
         sys_tracker.stop()
