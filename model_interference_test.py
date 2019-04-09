@@ -131,6 +131,8 @@ models_train = {
     'resnet_151_v1_batch_32': resnet_152_v1_b32_cmd
 }
 
+nvidia_smi_cmd = ['watch', '-n', '0.2', 'nvidia-smi', '--query-gpu', 'memory.used', '--format', 'csv']
+
 def process(line):
     # assuming slim learning
     # assuming have sec/step
@@ -164,6 +166,7 @@ def create_process(model_name, index, experiment_path, percent=0.0):
 
     err = open(err_out_file, 'w+')
     out = open(output_file, 'w+')
+
     cmd = models_train[model_name]
     train_dir_path = '--train_dir' if 'word' not in model_name else '--save_path' 
     cmd += [train_dir_path, train_dir]
@@ -213,7 +216,11 @@ def run(
             ids[p.pid] = i
         should_stop = False
         sys_tracker = sys_track.SystemInfoTracker(experiment_path)
-        
+
+        smi_file_path = os.path.join(experiment_path, 'smi.log') 
+        smi_file = open(smi_file_path, 'w+')
+        smi_p = subprocess.Popen(nvidia_smi_cmd, stdout=smi_file, stderr=smi_file)
+
         try:
             sys_tracker.start()
             while not should_stop:
@@ -230,7 +237,7 @@ def run(
                     current_time = time.time()
                     executed = current_time - start_time
                     print("checking the time, process %d been running for %d " % (pid,executed))
-                    if executed >= 60.0 * 6:
+                    if executed >= 60.0 * 8:
                         p.kill()
                         err.close()
                         out.close()
@@ -262,6 +269,8 @@ def run(
                 print('%d killed ! ! !' % pid)
         average_file.close()
         sys_tracker.stop()
+        smi_p.kill()
+        smi_file.close()
 
     # Experiment average size.
     average_file = open(average_log, mode='a+')
