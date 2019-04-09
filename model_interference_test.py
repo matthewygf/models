@@ -296,18 +296,18 @@ def main():
             ['mobilenet_v1_025_batch_32', 'mobilenet_v1_025_batch_32'],
             ['mobilenet_v1_025_batch_32', 'mobilenet_v1_025_batch_32', 'mobilenet_v1_025_batch_32', 'mobilenet_v1_025_batch_32'],
             ['resnet_v1_50_batch_32'], 
-            ['resnet_v1_50_batch_32', 'resnet_v1_50_batch_32']
+            ['resnet_v1_50_batch_32', 'resnet_v1_50_batch_32'],
             ['resnet_v1_50_batch_32', 'ptb_word_lm'],
             ['ptb_word_lm'],
-            ['ptb_word_lm', 'ptb_word_lm']
-            ['ptb_word_lm', 'mobilenet_v1_025_batch_32']
+            ['ptb_word_lm', 'ptb_word_lm'],
+            ['ptb_word_lm', 'mobilenet_v1_025_batch_32'],
             ['resnet_101_v1_batch_32'],
             ['resnet_151_v1_batch_32'],
             ['vgg19_batch_32'], 
             ['vgg16_batch_32'],
             ['inceptionv1_batch_32'],
-            ['inceptionv1_batch_32', 'inceptionv1_batch_32']
-            [ 'ptb_word_lm', 'inceptionv1_batch_32']
+            ['inceptionv1_batch_32', 'inceptionv1_batch_32'],
+            [ 'ptb_word_lm', 'inceptionv1_batch_32'],
             # ['inceptionv2_batch_32'],
             # ['inceptionv3_batch_32'],
             # ['inceptionv4_batch_32']
