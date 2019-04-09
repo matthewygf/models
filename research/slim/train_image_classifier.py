@@ -593,15 +593,18 @@ def main(_):
     init_train_op = tf.group(init_iterator_op, global_init_op, local_init_op, table_init_op)
 
     # GPU Sharing stuff.
-    tf.compat.v1.logging.info("SET MEMORY FRACTION TO %.2f" % FLAGS.gpu_memory_fraction)
-    gpu_options = tf.compat.v1.GPUOptions(per_process_gpu_memory_fraction=FLAGS.gpu_memory_fraction)
+    # tf.compat.v1.logging.info("SET MEMORY FRACTION TO %.2f" % FLAGS.gpu_memory_fraction)
+    gpu_options = tf.compat.v1.GPUOptions(allow_growth=True)
 
     config_proto = tf.compat.v1.ConfigProto(gpu_options=gpu_options)
 
     ###########################
     # Kicks off the training. #
     ###########################
-    with tf.contrib.tfprof.ProfileContext(FLAGS.train_dir+'/profile') as pctx:
+    with tf.contrib.tfprof.ProfileContext(
+      FLAGS.train_dir+'/profile',
+      trace_steps=range(100,200),
+      dump_steps=[200]) as pctx:
       tf.compat.v1.logging.info("PROFILE STARTS !")
       slim.learning.train(
           train_tensor,
