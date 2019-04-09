@@ -194,7 +194,7 @@ def get_split(split_name, dataset_dir, file_pattern=None, cycle_length=2):
   # declare dataset
   files = tf.data.Dataset.list_files([file_pattern])
   dataset = files.apply(tf.data.experimental.parallel_interleave(
-      tf.data.TFRecordDataset, cycle_length=cycle_length
+      tf.data.TFRecordDataset, cycle_length=cycle_length, sloppy=True
     )
   )
 

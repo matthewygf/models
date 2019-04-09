@@ -31,6 +31,71 @@ nasnet_b8_cmd = ['python3', 'research/slim/train_image_classifier.py',
                          '--dataset_dir', '/datasets/cifar10',
                          '--model_name', 'nasnet_cifar',	
                          '--batch_size', '8']
+
+
+resnet_50_b32_cmd = ['python3', 'research/slim/train_image_classifier.py', 
+                         '--dataset_name', 'cifar10',
+                         '--dataset_dir', '/datasets/cifar10',
+                         '--model_name', 'resnet_v2_50',	
+                         '--batch_size', '32']
+mobile_net_v1_025_b32_cmd = ['python3', 'research/slim/train_image_classifier.py', 
+                         '--dataset_name', 'cifar10',
+                         '--dataset_dir', '/datasets/cifar10',
+                         '--model_name', 'mobilenet_v1_025',
+                         '--batch_size', '32',
+                         ]
+resnet_50_v1_b32_cmd = ['python3', 'research/slim/train_image_classifier.py', 
+                         '--dataset_name', 'cifar10',
+                         '--dataset_dir', '/datasets/cifar10',
+                         '--model_name', 'resnet_v1_50',	
+                         '--batch_size', '32']
+vgg_19_b32_cmd = ['python3', 'research/slim/train_image_classifier.py', 
+                         '--dataset_name', 'cifar10',
+                         '--dataset_dir', '/datasets/cifar10',
+                         '--model_name', 'vgg_19',	
+                         '--batch_size', '32']
+vgg_16_b32_cmd = ['python3', 'research/slim/train_image_classifier.py', 
+                         '--dataset_name', 'cifar10',
+                         '--dataset_dir', '/datasets/cifar10',
+                         '--model_name', 'vgg_16',	
+                         '--batch_size', '32']
+alexnet_v2_b32_cmd = ['python3', 'research/slim/train_image_classifier.py', 
+                         '--dataset_name', 'cifar10',
+                         '--dataset_dir', '/datasets/cifar10',
+                         '--model_name', 'alexnet_v2',	
+                         '--batch_size', '32']
+inception_v1_b32_cmd = ['python3', 'research/slim/train_image_classifier.py', 
+                         '--dataset_name', 'cifar10',
+                         '--dataset_dir', '/datasets/cifar10',
+                         '--model_name', 'inception_v1',	
+                         '--batch_size', '32']
+inception_v2_b32_cmd = ['python3', 'research/slim/train_image_classifier.py', 
+                         '--dataset_name', 'cifar10',
+                         '--dataset_dir', '/datasets/cifar10',
+                         '--model_name', 'inception_v2',	
+                         '--batch_size', '32']
+inception_v3_b32_cmd = ['python3', 'research/slim/train_image_classifier.py', 
+                         '--dataset_name', 'cifar10',
+                         '--dataset_dir', '/datasets/cifar10',
+                         '--model_name', 'inception_v3',	
+                         '--batch_size', '32']
+inception_v4_b32_cmd = ['python3', 'research/slim/train_image_classifier.py', 
+                         '--dataset_name', 'cifar10',
+                         '--dataset_dir', '/datasets/cifar10',
+                         '--model_name', 'inception_v4',	
+                         '--batch_size', '32']
+resnet_101_v1_b32_cmd = ['python3', 'research/slim/train_image_classifier.py', 
+                         '--dataset_name', 'cifar10',
+                         '--dataset_dir', '/datasets/cifar10',
+                         '--model_name', 'resnet_v1_101',	
+                         '--batch_size', '32']
+resnet_152_v1_b32_cmd = ['python3', 'research/slim/train_image_classifier.py', 
+                         '--dataset_name', 'cifar10',
+                         '--dataset_dir', '/datasets/cifar10',
+                         '--model_name', 'resnet_v1_152',	
+                         '--batch_size', '32']
+
+
 resnet_50_b8_cmd = ['python3', 'research/slim/train_image_classifier.py', 
                          '--dataset_name', 'cifar10',
                          '--dataset_dir', '/datasets/cifar10',
@@ -50,10 +115,20 @@ models_train = {
     'mobilenet_v2_035': mobile_net_v2_035_cmd,
     'mobilenet_v1_025_batch_40': mobile_net_v1_025_cmd,
     'mobilenet_v1_025_batch_48': mobile_net_v1_025_b48_cmd,
+    'mobilenet_v1_025_batch_32': mobile_net_v1_025_b32_cmd,
     'ptb_word_lm': ptb_word_lm_cmd,
     'nasnet_batch_8': nasnet_b8_cmd,
     'resnet_50_batch8_cmd': resnet_50_b8_cmd,
-    'resnet_v1_50_32': resnet_v1_50_16_cmd
+    'resnet_v1_50_batch_32': resnet_50_v1_b32_cmd,
+    'vgg19_batch_32': vgg_19_b32_cmd,
+    'vgg16_batch_32': vgg_16_b32_cmd,
+    'alexnet_v2_batch_32': alexnet_v2_b32_cmd,
+    'inceptionv1_batch_32': inception_v1_b32_cmd,
+    'inceptionv2_batch_32': inception_v2_b32_cmd,
+    'inceptionv3_batch_32': inception_v3_b32_cmd,
+    'inceptionv4_batch_32': inception_v4_b32_cmd,
+    'resnet_101_v1_batch_32': resnet_101_v1_b32_cmd,
+    'resnet_151_v1_batch_32': resnet_152_v1_b32_cmd
 }
 
 def process(line):
@@ -198,9 +273,17 @@ def run(
 def main():
     # which one we should run in parallel
     sets = [
-            ['mobilenet_v1_025_batch_48'], 
-            #['resnet_50_batch8_cmd', 'ptb_word_lm'], 
-            #['resnet_50_batch8_cmd', 'resnet_50_batch8_cmd']
+            ['mobilenet_v1_025_batch_32'], 
+            ['resnet_v1_50_batch_32'], 
+            ['resnet_101_v1_batch_32'],
+            ['resnet_151_v1_batch_32']
+            ['vgg19_batch_32'], 
+            ['vgg16_batch_32'],
+            ['alexnet_v2_batch_32'],
+            ['inceptionv1_batch_32'],
+            ['inceptionv2_batch_32'],
+            ['inceptionv3_batch_32'],
+            ['inceptionv4_batch_32']
            ]
     project_dir = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
     experiment_path = os.path.join(project_dir, 'experiment')
