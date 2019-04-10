@@ -303,13 +303,14 @@ def main():
             #['mobilenet_v1_025_batch_32'],
             #['mobilenet_v1_025_batch_32', 'mobilenet_v1_025_batch_32'],
             #['mobilenet_v1_025_batch_32', 'mobilenet_v1_025_batch_32', 'mobilenet_v1_025_batch_32', 'mobilenet_v1_025_batch_32'],
-            ['ptb_word_lm'],
-            ['ptb_word_lm', 'ptb_word_lm'],
-            ['ptb_word_lm', 'mobilenet_v1_025_batch_32'],
-            ['ptb_word_lm', 'mobilenet_v1_025_batch_32', 'mobilenet_v1_025_batch_32'],
-            #['resnet_v1_50_batch_8'], 
-            #['resnet_v1_50_batch_8', 'mobilenet_v1_025_batch_32']
-            #['resnet_v1_50_batch_8', 'mobilenet_v1_025_batch_32', 'mobilenet_v1_025_batch_32'], 
+            #['ptb_word_lm'],
+            #['ptb_word_lm', 'ptb_word_lm'],
+            #['ptb_word_lm', 'mobilenet_v1_025_batch_32'],
+            #['ptb_word_lm', 'mobilenet_v1_025_batch_32', 'mobilenet_v1_025_batch_32'],
+            ['ptb_word_lm', 'ptb_word_lm', 'ptb_word_lm', 'ptb_word_lm'], 
+            ['ptb_word_lm', 'mobilenet_v1_025_batch_32', 'ptb_word_lm', 'mobilenet_v1_025_batch_32'],
+            ['ptb_word_lm', 'ptb_word_lm', 'ptb_word_lm', 'mobilenet_v1_025_batch_32'], 
+            ['ptb_word_lm', 'mobilenet_v1_025_batch_32', 'mobilenet_v1_025_batch_32', 'mobilenet_v1_025_batch_32']
            ]
     project_dir = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
     experiment_path = os.path.join(project_dir, 'experiment')
