@@ -1,4 +1,5 @@
-import os 
+import os
+import signal
 import time
 import subprocess
 import datetime
@@ -283,7 +284,9 @@ def run(
         finally:
             smi_poll = smi_p.poll()
             if smi_poll is None:
-                os.killpg(os.getpgid(pro.pid), signal.SIGTERM)
+                for proc in smi_p.children(recursive=True):
+                    proc.kill()
+                smi_p.kill()
                 smi_file.close()
 
         average_file.close()
