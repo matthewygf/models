@@ -300,9 +300,9 @@ def run(
 def main():
     # which one we should run in parallel
     sets = [
-            ['mobilenet_v1_025_batch_32'],
-            ['mobilenet_v1_025_batch_32', 'mobilenet_v1_025_batch_32'],
-            ['mobilenet_v1_025_batch_32', 'mobilenet_v1_025_batch_32', 'mobilenet_v1_025_batch_32', 'mobilenet_v1_025_batch_32'],
+            #['mobilenet_v1_025_batch_32'],
+            #['mobilenet_v1_025_batch_32', 'mobilenet_v1_025_batch_32'],
+            #['mobilenet_v1_025_batch_32', 'mobilenet_v1_025_batch_32', 'mobilenet_v1_025_batch_32', 'mobilenet_v1_025_batch_32'],
             ['ptb_word_lm'],
             ['ptb_word_lm', 'ptb_word_lm'],
             ['ptb_word_lm', 'mobilenet_v1_025_batch_32'],

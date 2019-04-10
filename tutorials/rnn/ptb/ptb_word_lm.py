@@ -535,7 +535,7 @@ def main(_):
     gpu_options = tf.compat.v1.GPUOptions(allow_growth=True)
     config_proto = tf.compat.v1.ConfigProto(gpu_options=gpu_options, allow_soft_placement=soft_placement)
     with tf.contrib.tfprof.ProfileContext(
-      FLAGS.train_dir+'/profile',
+      FLAGS.save_path+'/profile',
       trace_steps=range(100,200),
       dump_steps=[200]) as pctx:
       tf.compat.v1.logging.info("PROFILE STARTS !")
