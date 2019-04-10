@@ -284,8 +284,6 @@ def run(
         finally:
             smi_poll = smi_p.poll()
             if smi_poll is None:
-                for proc in smi_p.children(recursive=True):
-                    proc.kill()
                 smi_p.kill()
                 smi_file.close()
 
