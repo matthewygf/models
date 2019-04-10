@@ -226,6 +226,7 @@ def run(
             smi_file = open(smi_file_path, 'a+')
             nvidia_smi_cmd = ['watch', '-n', '0.2', 'nvidia-smi', '--query-gpu=memory.used,memory.total,utilization.gpu,utilization.memory,power.draw', '--format=csv,noheader', '|', 'tee', '-a' , experiment_path+'/smi_watch.log']
             smi_p = subprocess.Popen(nvidia_smi_cmd, stdout=smi_file, stderr=smi_file)
+            smi_poll = None
             sys_tracker.start()
             while not should_stop:
                 time.sleep(5)
@@ -262,8 +263,11 @@ def run(
                         line = ("experiment set %d, experiment_run %d: %d process average num p step is %.4f and total number of step is: %d \n" % 
                                     (experiment_index, experiment_run, pid, mean, num))
                         average_file.write(line)
+                        smi_poll = smi_p.poll()
+                        if smi_poll is None:
+                            smi_p.kill()
+                            smi_file.close()
 
-                smi_poll = None
                 smi_poll = smi_p.poll()
                 if smi_poll is None:
                     print('NVIDIA_SMI Process %d still running' % smi_p.pid)
@@ -297,10 +301,10 @@ def run(
 def main():
     # which one we should run in parallel
     sets = [
-            # ['mobilenet_v1_025_batch_32'],
-            # ['mobilenet_v1_025_batch_32', 'mobilenet_v1_025_batch_32'],
-            # ['mobilenet_v1_025_batch_32', 'mobilenet_v1_025_batch_32', 'mobilenet_v1_025_batch_32', 'mobilenet_v1_025_batch_32'],
-            # ['resnet_v1_50_batch_8'], 
+            ['mobilenet_v1_025_batch_32'],
+            ['mobilenet_v1_025_batch_32', 'mobilenet_v1_025_batch_32'],
+            ['mobilenet_v1_025_batch_32', 'mobilenet_v1_025_batch_32', 'mobilenet_v1_025_batch_32', 'mobilenet_v1_025_batch_32'],
+            #['resnet_v1_50_batch_8'], 
             # ['resnet_v1_50_batch_8', 'resnet_v1_50_batch_8'],
             # ['resnet_v1_50_batch_8', 'ptb_word_lm'],
             ['ptb_word_lm'],
