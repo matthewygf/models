@@ -263,10 +263,7 @@ def run(
                         line = ("experiment set %d, experiment_run %d: %d process average num p step is %.4f and total number of step is: %d \n" % 
                                     (experiment_index, experiment_run, pid, mean, num))
                         average_file.write(line)
-                        smi_poll = smi_p.poll()
-                        if smi_poll is None:
-                            smi_p.kill()
-                            smi_file.close()
+                        
 
                 smi_poll = smi_p.poll()
                 if smi_poll is None:
@@ -284,10 +281,11 @@ def run(
                 out.close()
                 print('%d killed ! ! !' % pid)
         finally:
-            if smi_p.poll is None:
-                smi_p.kill()
+            smi_poll = smi_p.poll()
+            if smi_poll is None:
+                os.killpg(os.getpgid(pro.pid), signal.SIGTERM)
                 smi_file.close()
-            
+
         average_file.close()
         sys_tracker.stop()
 
@@ -304,28 +302,13 @@ def main():
             ['mobilenet_v1_025_batch_32'],
             ['mobilenet_v1_025_batch_32', 'mobilenet_v1_025_batch_32'],
             ['mobilenet_v1_025_batch_32', 'mobilenet_v1_025_batch_32', 'mobilenet_v1_025_batch_32', 'mobilenet_v1_025_batch_32'],
-            #['resnet_v1_50_batch_8'], 
-            # ['resnet_v1_50_batch_8', 'resnet_v1_50_batch_8'],
-            # ['resnet_v1_50_batch_8', 'ptb_word_lm'],
             ['ptb_word_lm'],
             ['ptb_word_lm', 'ptb_word_lm'],
             ['ptb_word_lm', 'mobilenet_v1_025_batch_32'],
             ['ptb_word_lm', 'mobilenet_v1_025_batch_32', 'mobilenet_v1_025_batch_32'],
-            ['inceptionv1_batch_8'],
-            # ['inceptionv1_batch_8','inceptionv1_batch_8'],
-            # ['resnet_v1_50_batch_8', 'inceptionv1_batch_8'], 
-            # ['inceptionv1_batch_8', 'ptb_word_lm']
-            # ['resnet_101_v1_batch_8'],
-            # ['resnet_151_v1_batch_8'],
-            # ['vgg19_batch_8'], 
-            # ['vgg16_batch_8'],
-            # ['inceptionv1_batch_32'],
-            # ['inceptionv1_batch_32', 'inceptionv1_batch_32'],
-            # [ 'ptb_word_lm', 'inceptionv1_batch_32'],
-            # ['inceptionv2_batch_32'],
-            # ['inceptionv3_batch_32'],
-            # ['inceptionv4_batch_32']
-            # ['alexnet_v2_batch_32'],
+            #['resnet_v1_50_batch_8'], 
+            #['resnet_v1_50_batch_8', 'mobilenet_v1_025_batch_32']
+            #['resnet_v1_50_batch_8', 'mobilenet_v1_025_batch_32', 'mobilenet_v1_025_batch_32'], 
            ]
     project_dir = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
     experiment_path = os.path.join(project_dir, 'experiment')

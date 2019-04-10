@@ -531,30 +531,34 @@ def main(_):
     epoch_size = (batch_len - 1) // config.num_steps
     stop_hook = tf.train.StopAtStepHook(last_step=config.max_max_epoch * epoch_size)
     # GPU Sharing stuff.
-    tf.compat.v1.logging.info('GPU Memory fraction : %.3f' % FLAGS.gpu_memory_fraction)
-    gpu_options = tf.compat.v1.GPUOptions(per_process_gpu_memory_fraction=FLAGS.gpu_memory_fraction)
+    #tf.compat.v1.logging.info('GPU Memory fraction : %.3f' % FLAGS.gpu_memory_fraction)
+    gpu_options = tf.compat.v1.GPUOptions(allow_growth=True)
     config_proto = tf.compat.v1.ConfigProto(gpu_options=gpu_options, allow_soft_placement=soft_placement)
-    print(config_proto)
-    with tf.compat.v1.train.MonitoredTrainingSession(
-            checkpoint_dir=FLAGS.save_path,
-            config=config_proto,
-            hooks=[stop_hook]) as session:
-      i = 0
-      while not session.should_stop():
-        lr_decay = config.lr_decay ** max(i + 1 - config.max_epoch, 0.0)
-        m.assign_lr(session, config.learning_rate * lr_decay)
+    with tf.contrib.tfprof.ProfileContext(
+      FLAGS.train_dir+'/profile',
+      trace_steps=range(100,200),
+      dump_steps=[200]) as pctx:
+      tf.compat.v1.logging.info("PROFILE STARTS !")
+      with tf.compat.v1.train.MonitoredTrainingSession(
+              checkpoint_dir=FLAGS.save_path,
+              config=config_proto,
+              hooks=[stop_hook]) as session:
+        i = 0
+        while not session.should_stop():
+          lr_decay = config.lr_decay ** max(i + 1 - config.max_epoch, 0.0)
+          m.assign_lr(session, config.learning_rate * lr_decay)
 
-        print("Epoch: %d Learning rate: %.3f" % (i + 1, session.run(m.lr)))
-        train_perplexity = run_epoch(session, m, eval_op=m.train_op,
-                                     verbose=True, global_step=m.global_op, is_training=True)
-        print("Epoch: %d Train Perplexity: %.3f" % (i + 1, train_perplexity))
-        valid_perplexity = run_epoch(session, mvalid)
-        print("Epoch: %d Valid Perplexity: %.3f" % (i + 1, valid_perplexity))
-        i += 1
-        print("ran epoch %d" % i)
+          print("Epoch: %d Learning rate: %.3f" % (i + 1, session.run(m.lr)))
+          train_perplexity = run_epoch(session, m, eval_op=m.train_op,
+                                      verbose=True, global_step=m.global_op, is_training=True)
+          print("Epoch: %d Train Perplexity: %.3f" % (i + 1, train_perplexity))
+          valid_perplexity = run_epoch(session, mvalid)
+          print("Epoch: %d Valid Perplexity: %.3f" % (i + 1, valid_perplexity))
+          i += 1
+          print("ran epoch %d" % i)
 
-      test_perplexity = run_epoch(session, mtest)
-      print("Test Perplexity: %.3f" % test_perplexity)
+        test_perplexity = run_epoch(session, mtest)
+        print("Test Perplexity: %.3f" % test_perplexity)
 
 if __name__ == "__main__":
   tf.logging.set_verbosity(tf.logging.INFO)
