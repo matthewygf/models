@@ -224,7 +224,7 @@ def run(
         try:
             smi_file_path = os.path.join(experiment_path, 'smi.log') 
             smi_file = open(smi_file_path, 'a+')
-            nvidia_smi_cmd = ['watch', '-n', '0.2', 'nvidia-smi', '--query-gpu=memory.used,memory.total,utilization.gpu,utilization.memory,power.draw', '--format=csv,noheader', '|', 'tee', '-a' , experiment_path+'/smi_watch.log']
+            nvidia_smi_cmd = ['watch', '-n', '0.2', 'nvidia-smi', '--query-gpu=memory.used,memory.total,utilization.gpu,utilization.memory,power.draw', '--format=noheader,csv', '|', 'tee', '-a' , experiment_path+'/smi_watch.log']
             smi_p = subprocess.Popen(nvidia_smi_cmd, stdout=smi_file, stderr=smi_file)
             smi_poll = None
             sys_tracker.start()
