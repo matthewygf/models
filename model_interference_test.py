@@ -177,6 +177,7 @@ def create_process(model_name, index, experiment_path, percent=0.0):
     cmd += [train_dir_path, train_dir]
     if 'word' in model_name:
         data_path_simple = os.path.join(simple_examples_data, 'simple-examples')
+        data_path_simple = os.path.join(data_path_simple, 'data')
         data_path = ['--data_path', data_path_simple]
         cmd += data_path
 
