@@ -25,6 +25,10 @@ from deployment import model_deploy
 from nets import nets_factory
 from preprocessing import preprocessing_factory
 
+import ctypes
+# not catching because lets error if we cant load it
+_cudart = ctypes.CDLL('libcudart.so')
+
 slim = tf.contrib.slim
 
 tf.app.flags.DEFINE_string(
@@ -593,7 +597,6 @@ def main(_):
     init_train_op = tf.group(init_iterator_op, global_init_op, local_init_op, table_init_op)
 
     # GPU Sharing stuff.
-    # tf.compat.v1.logging.info("SET MEMORY FRACTION TO %.2f" % FLAGS.gpu_memory_fraction)
     gpu_options = tf.compat.v1.GPUOptions(allow_growth=True)
 
     config_proto = tf.compat.v1.ConfigProto(gpu_options=gpu_options)
@@ -601,11 +604,12 @@ def main(_):
     ###########################
     # Kicks off the training. #
     ###########################
-    with tf.contrib.tfprof.ProfileContext(
-      FLAGS.train_dir+'/profile',
-      trace_steps=range(100,200),
-      dump_steps=[200]) as pctx:
-      tf.compat.v1.logging.info("PROFILE STARTS !")
+    try:
+
+      status = _cudart.cudaProfileStart()
+      if status != 0:
+        raise EnvironmentError()
+
       slim.learning.train(
           train_tensor,
           logdir=FLAGS.train_dir,
@@ -620,6 +624,12 @@ def main(_):
           save_summaries_secs=FLAGS.save_summaries_secs,
           save_interval_secs=FLAGS.save_interval_secs,
           sync_optimizer=optimizer if FLAGS.sync_replicas else None)
+    finally:
+      if status == 0:
+        # if cuda profile start was successful
+        # then we stop
+        _cudart.cudaProfileStop()
+        
 
 
 if __name__ == '__main__':
