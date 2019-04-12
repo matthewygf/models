@@ -175,7 +175,7 @@ def create_process(model_name, index, experiment_path, percent=0.0):
     train_dir_path = '--train_dir' if 'word' not in model_name else '--save_path' 
     simple_examples_data = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
     cmd += [train_dir_path, train_dir]
-    if 'word' not in model_name:
+    if 'word' in model_name:
         data_path_simple = os.path.join(simple_examples_data, 'simple-examples')
         data_path = ['--data_path', data_path_simple]
         cmd += data_path
