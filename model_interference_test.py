@@ -113,7 +113,6 @@ resnet_v1_50_16_cmd = ['python3', 'research/slim/train_image_classifier.py',
                     '--model_name', 'resnet_v1_50',
                     '--batch_size', '16']
 ptb_word_lm_cmd = ['python3', 'tutorials/rnn/ptb/ptb_word_lm.py',
-                   '--data_path','/models/simple-examples/data/',
                    '--model','small',
                    '--rnn_mode', 'cudnn'
                   ]
@@ -174,7 +173,13 @@ def create_process(model_name, index, experiment_path, percent=0.0):
 
     cmd = models_train[model_name]
     train_dir_path = '--train_dir' if 'word' not in model_name else '--save_path' 
+    simple_examples_data = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
     cmd += [train_dir_path, train_dir]
+    if 'word' not in model_name:
+        data_path_simple = os.path.join(simple_examples_data, 'simple-examples')
+        data_path = ['--data_path', data_path_simple]
+        cmd += data_path
+
     if percent > 0.0:
         gpu_mem_opts = ['--gpu_memory_fraction', str(percent)] 
         cmd += gpu_mem_opts
