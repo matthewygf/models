@@ -243,7 +243,7 @@ def run(
                     current_time = time.time()
                     executed = current_time - start_time
                     print("checking the time, process %d been running for %d " % (pid,executed))
-                    if executed >= 60.0 * 4:
+                    if poll is not None:
                         # make sure we profile a few mins.
                         # to observe the interference
                         p.kill()
