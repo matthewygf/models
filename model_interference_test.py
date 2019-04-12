@@ -226,15 +226,15 @@ def run(
             #trackers.append(tracker)
             ids[p.pid] = i
         should_stop = False
-        sys_tracker = sys_track.SystemInfoTracker(experiment_path)
+        #sys_tracker = sys_track.SystemInfoTracker(experiment_path)
 
         try:
             smi_file_path = os.path.join(experiment_path, 'smi.log') 
             smi_file = open(smi_file_path, 'a+')
             nvidia_smi_cmd = ['watch', '-n', '0.2', 'nvidia-smi', '--query-gpu=memory.used,memory.total,utilization.gpu,utilization.memory,power.draw', '--format=noheader,csv', '|', 'tee', '-a' , experiment_path+'/smi_watch.log']
-            smi_p = subprocess.Popen(nvidia_smi_cmd, stdout=smi_file, stderr=smi_file)
-            smi_poll = None
-            sys_tracker.start()
+            #smi_p = subprocess.Popen(nvidia_smi_cmd, stdout=smi_file, stderr=smi_file)
+            #smi_poll = None
+            #sys_tracker.start()
             while not should_stop:
                 time.sleep(5)
                 if len(processes_list) <= 0:
@@ -249,7 +249,7 @@ def run(
                     current_time = time.time()
                     executed = current_time - start_time
                     print("checking the time, process %d been running for %d " % (pid,executed))
-                    if executed >= 60.0 * 10:
+                    if executed >= 60.0 * 4:
                         # make sure we profile a few mins.
                         # to observe the interference
                         p.kill()
@@ -274,29 +274,29 @@ def run(
                         average_file.write(line)
                         
 
-                smi_poll = smi_p.poll()
-                if smi_poll is None:
-                    print('NVIDIA_SMI Process %d still running' % smi_p.pid)
+                #smi_poll = smi_p.poll()
+                #if smi_poll is None:
+                #    print('NVIDIA_SMI Process %d still running' % smi_p.pid)
 
             print('total experiments: %d, experiment_run %d , finished %d' % (total_length-1, experiment_run, experiment_index))
 
         except KeyboardInterrupt:
-            smi_p.kill()
-            smi_file.close()
+            #smi_p.kill()
+            #smi_file.close()
             for p, err, out in zip(processes_list, err_logs, out_logs):
                 pid = p.pid
                 p.kill()
                 err.close()
                 out.close()
                 print('%d killed ! ! !' % pid)
-        finally:
-            smi_poll = smi_p.poll()
-            if smi_poll is None:
-                smi_p.kill()
-                smi_file.close()
+        # finally:
+        #     # smi_poll = smi_p.poll()
+        #     # if smi_poll is None:
+        #     #     smi_p.kill()
+        #     #     smi_file.close()
 
         average_file.close()
-        sys_tracker.stop()
+        #sys_tracker.stop()
 
     # Experiment average size.
     average_file = open(average_log, mode='a+')
@@ -308,12 +308,12 @@ def run(
 def main():
     # which one we should run in parallel
     sets = [
-            #['mobilenet_v1_025_batch_32'],
-            #['mobilenet_v1_025_batch_32', 'mobilenet_v1_025_batch_32'],
-            #['mobilenet_v1_025_batch_32', 'mobilenet_v1_025_batch_32', 'mobilenet_v1_025_batch_32', 'mobilenet_v1_025_batch_32'],
+            ['mobilenet_v1_025_batch_32'],
+            ['mobilenet_v1_025_batch_32', 'mobilenet_v1_025_batch_32'],
+            ['mobilenet_v1_025_batch_32', 'mobilenet_v1_025_batch_32', 'mobilenet_v1_025_batch_32', 'mobilenet_v1_025_batch_32'],
             ['ptb_word_lm'],
-            #['ptb_word_lm', 'ptb_word_lm'],
-            #['ptb_word_lm', 'mobilenet_v1_025_batch_32'],
+            ['ptb_word_lm', 'ptb_word_lm'],
+            ['ptb_word_lm', 'mobilenet_v1_025_batch_32'],
             #['ptb_word_lm', 'mobilenet_v1_025_batch_32', 'mobilenet_v1_025_batch_32'],
             # ['ptb_word_lm', 'ptb_word_lm', 'ptb_word_lm', 'ptb_word_lm'], 
             # ['ptb_word_lm', 'mobilenet_v1_025_batch_32', 'ptb_word_lm', 'mobilenet_v1_025_batch_32'],
