@@ -210,14 +210,14 @@ def run(
         for i, m in enumerate(experiment_set):
             start_time = time.time()
             p, out, err, path, out_dir = create_process(m, i, experiment_path, percent)
-            tracker = p_track.ProcessInfoTracker(out_dir, p.pid)
-            tracker.start()
+            #tracker = p_track.ProcessInfoTracker(out_dir, p.pid)
+            #tracker.start()
             processes_list.append(p)
             err_logs.append(err)
             out_logs.append(out)
             start_times.append(start_time)
             err_file_paths.append(path)
-            trackers.append(tracker)
+            #trackers.append(tracker)
             ids[p.pid] = i
         should_stop = False
         sys_tracker = sys_track.SystemInfoTracker(experiment_path)
@@ -234,7 +234,7 @@ def run(
                 if len(processes_list) <= 0:
                     should_stop = True
 
-                for i,(p, err, out, start_time, path, tracker) in enumerate(zip(processes_list, err_logs, out_logs, start_times, err_file_paths, trackers)):
+                for i,(p, err, out, start_time, path) in enumerate(zip(processes_list, err_logs, out_logs, start_times, err_file_paths)):
                     poll = None
                     pid = p.pid
                     poll = p.poll()
@@ -261,8 +261,8 @@ def run(
                         out_logs.pop(i)
                         start_times.pop(i)
                         err_file_paths.pop(i)
-                        tracker.stop()
-                        trackers.pop(i)
+                        #tracker.stop()
+                        #trackers.pop(i)
                         line = ("experiment set %d, experiment_run %d: %d process average num p step is %.4f and total number of step is: %d \n" % 
                                     (experiment_index, experiment_run, pid, mean, num))
                         average_file.write(line)
