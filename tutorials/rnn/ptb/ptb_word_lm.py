@@ -411,7 +411,6 @@ def run_epoch(session, model, eval_op=None, verbose=False, global_step=None, is_
   start_time = time.time()
   costs = 0.0
   iters = 0
-  
   state = session.run(model.initial_state)
 
   fetches = {
@@ -425,9 +424,6 @@ def run_epoch(session, model, eval_op=None, verbose=False, global_step=None, is_
     fetches["eval_op"] = eval_op
 
   for step in range(model.input.epoch_size):
-    status = _cudart.cudaProfilerStart()
-    if status != 0:
-      raise EnvironmentError()
     step_start_time = time.time()
     feed_dict = {}
     for i, (c, h) in enumerate(model.initial_state):
@@ -440,8 +436,6 @@ def run_epoch(session, model, eval_op=None, verbose=False, global_step=None, is_
       tf.compat.v1.logging.info('global step %d, (%.3f sec/step)', vals["global_step"], time_elapsed)
     cost = vals["cost"]
     state = vals["final_state"]
-    if status == 0:
-    _cudart.cudaProfilerStop()
 
     costs += cost
     iters += model.input.num_steps
@@ -451,8 +445,6 @@ def run_epoch(session, model, eval_op=None, verbose=False, global_step=None, is_
             (step * 1.0 / model.input.epoch_size, np.exp(costs / iters),
              iters * model.input.batch_size * max(1, FLAGS.num_gpus) /
              (time.time() - start_time)))
-
-  
 
   return np.exp(costs / iters)
 
@@ -541,13 +533,15 @@ def main(_):
     data_len = len(train_data)
     batch_len = data_len // config.batch_size
     epoch_size = (batch_len - 1) // config.num_steps
-    stop_hook = tf.train.StopAtStepHook(last_step=config.max_max_epoch * epoch_size)
+    stop_hook = tf.train.StopAtStepHook(last_step= 1 * epoch_size)
     # GPU Sharing stuff.
     #tf.compat.v1.logging.info('GPU Memory fraction : %.3f' % FLAGS.gpu_memory_fraction)
     gpu_options = tf.compat.v1.GPUOptions(allow_growth=True)
     config_proto = tf.compat.v1.ConfigProto(gpu_options=gpu_options, allow_soft_placement=soft_placement)
     tf.compat.v1.logging.info("PROFILE STARTS !")
-    
+    status = _cudart.cudaProfilerStart()
+    if status != 0:
+      raise EnvironmentError()
 
     with tf.compat.v1.train.MonitoredTrainingSession(
             checkpoint_dir=FLAGS.save_path,
@@ -569,6 +563,8 @@ def main(_):
 
       test_perplexity = run_epoch(session, mtest)
       print("Test Perplexity: %.3f" % test_perplexity)
+    
+    _cudart.cudaProfileStop()
 
 if __name__ == "__main__":
   tf.logging.set_verbosity(tf.logging.INFO)
