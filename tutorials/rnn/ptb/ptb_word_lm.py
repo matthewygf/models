@@ -533,7 +533,7 @@ def main(_):
     data_len = len(train_data)
     batch_len = data_len // config.batch_size
     epoch_size = (batch_len - 1) // config.num_steps
-    stop_hook = tf.train.StopAtStepHook(last_step= 1 * epoch_size)
+    stop_hook = tf.train.StopAtStepHook(last_step=config.max_max_epoch * epoch_size)
     # GPU Sharing stuff.
     #tf.compat.v1.logging.info('GPU Memory fraction : %.3f' % FLAGS.gpu_memory_fraction)
     gpu_options = tf.compat.v1.GPUOptions(allow_growth=True)
