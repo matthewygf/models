@@ -606,7 +606,7 @@ def main(_):
     ###########################
     try:
 
-      status = _cudart.cudaProfileStart()
+      status = _cudart.cudaProfilerStart()
       if status != 0:
         raise EnvironmentError()
 
@@ -628,7 +628,7 @@ def main(_):
       if status == 0:
         # if cuda profile start was successful
         # then we stop
-        _cudart.cudaProfileStop()
+        _cudart.cudaProfilerStop()
         
 
 

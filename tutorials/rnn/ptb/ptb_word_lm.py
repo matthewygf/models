@@ -539,7 +539,7 @@ def main(_):
     gpu_options = tf.compat.v1.GPUOptions(allow_growth=True)
     config_proto = tf.compat.v1.ConfigProto(gpu_options=gpu_options, allow_soft_placement=soft_placement)
     tf.compat.v1.logging.info("PROFILE STARTS !")
-    status = _cudart.cudaProfileStart()
+    status = _cudart.cudaProfilerStart()
     if status != 0:
       raise EnvironmentError()
 
@@ -564,7 +564,7 @@ def main(_):
       test_perplexity = run_epoch(session, mtest)
       print("Test Perplexity: %.3f" % test_perplexity)
     
-    _cudart.cudaProfileStop()
+    _cudart.cudaProfilerStop()
 
 if __name__ == "__main__":
   tf.logging.set_verbosity(tf.logging.INFO)
