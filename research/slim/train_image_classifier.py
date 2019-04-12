@@ -14,6 +14,10 @@
 # ==============================================================================
 """Generic training script that trains a model using a given dataset."""
 
+
+import os
+os.environ["CUDA_VISIBLE_DEVICES"]="3"
+
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -28,6 +32,7 @@ from preprocessing import preprocessing_factory
 import ctypes
 # not catching because lets error if we cant load it
 _cudart = ctypes.CDLL('libcudart.so')
+
 
 slim = tf.contrib.slim
 
