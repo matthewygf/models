@@ -249,7 +249,7 @@ def run(
                     current_time = time.time()
                     executed = current_time - start_time
                     print("checking the time, process %d been running for %d " % (pid,executed))
-                    if executed >= 60.0 * 4:
+                    if executed >= 60.0 * 5:
                         # make sure we profile a few mins.
                         # to observe the interference
                         p.kill()
@@ -314,8 +314,8 @@ def main():
             ['ptb_word_lm'],
             ['ptb_word_lm', 'ptb_word_lm'],
             ['ptb_word_lm', 'mobilenet_v1_025_batch_32'],
-            #['ptb_word_lm', 'mobilenet_v1_025_batch_32', 'mobilenet_v1_025_batch_32'],
-            # ['ptb_word_lm', 'ptb_word_lm', 'ptb_word_lm', 'ptb_word_lm'], 
+            ['ptb_word_lm', 'mobilenet_v1_025_batch_32', 'mobilenet_v1_025_batch_32'],
+            ['ptb_word_lm', 'ptb_word_lm', 'ptb_word_lm', 'ptb_word_lm'], 
             # ['ptb_word_lm', 'mobilenet_v1_025_batch_32', 'ptb_word_lm', 'mobilenet_v1_025_batch_32'],
             # ['ptb_word_lm', 'ptb_word_lm', 'ptb_word_lm', 'mobilenet_v1_025_batch_32'], 
             # ['ptb_word_lm', 'mobilenet_v1_025_batch_32', 'mobilenet_v1_025_batch_32', 'mobilenet_v1_025_batch_32']
