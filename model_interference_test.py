@@ -180,6 +180,9 @@ def create_process(model_name, index, experiment_path, percent=0.0):
         data_path_simple = os.path.join(data_path_simple, 'data')
         data_path = ['--data_path', data_path_simple]
         cmd += data_path
+    else:
+        timestep = ['--max_number_of_steps', '50']
+        cmd += timestep
 
     if percent > 0.0:
         gpu_mem_opts = ['--gpu_memory_fraction', str(percent)] 
