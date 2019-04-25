@@ -10,7 +10,7 @@ import process_tracker as p_track
 import system_tracker as sys_track
 import numpy as np
 
-mobile_net_v2_035_cmd = ['python3', 'research/slim/train_image_classifier.py', 
+mobile_net_v2_035_b16_cmd = ['python3', 'research/slim/train_image_classifier.py', 
                          '--dataset_name', 'cifar10',
                          '--dataset_dir', '/datasets/cifar10',
                          '--model_name', 'mobilenet_v2_035',	
@@ -100,8 +100,6 @@ resnet_152_v1_b8_cmd = ['python3', 'research/slim/train_image_classifier.py',
                          '--dataset_dir', '/datasets/cifar10',
                          '--model_name', 'resnet_v1_152',	
                          '--batch_size', '8']
-
-
 resnet_50_b8_cmd = ['python3', 'research/slim/train_image_classifier.py', 
                          '--dataset_name', 'cifar10',
                          '--dataset_dir', '/datasets/cifar10',
@@ -117,7 +115,7 @@ ptb_word_lm_cmd = ['python3', 'tutorials/rnn/ptb/ptb_word_lm.py',
                    '--rnn_mode', 'cudnn'
                   ]
 models_train = {
-    'mobilenet_v2_035': mobile_net_v2_035_cmd,
+    'mobilenet_v2_035_batch_16': mobile_net_v2_035_b16_cmd,
     'mobilenet_v1_025_batch_40': mobile_net_v1_025_cmd,
     'mobilenet_v1_025_batch_48': mobile_net_v1_025_b48_cmd,
     'mobilenet_v1_025_batch_32': mobile_net_v1_025_b32_cmd,
@@ -311,7 +309,7 @@ def run(
 def main():
     # which one we should run in parallel
     sets = [
-            ['inceptionv4_batch_8']
+            ['resnet_v1_50_batch_8']
             # ['mobilenet_v1_025_batch_32'],
             # ['mobilenet_v1_025_batch_32', 'mobilenet_v1_025_batch_32'],
             # ['mobilenet_v1_025_batch_32', 'mobilenet_v1_025_batch_32', 'mobilenet_v1_025_batch_32', 'mobilenet_v1_025_batch_32'],
