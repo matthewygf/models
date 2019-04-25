@@ -179,7 +179,7 @@ def create_process(model_name, index, experiment_path, percent=0.0):
         data_path = ['--data_path', data_path_simple]
         cmd += data_path
     else:
-        timestep = ['--max_number_of_steps', '250']
+        timestep = ['--max_number_of_steps', '100']
         cmd += timestep
 
     if percent > 0.0:
