@@ -599,56 +599,38 @@ def main(_):
 
     # GPU Sharing stuff.
     # gpu_options = tf.compat.v1.GPUOptions(allow_growth=True)
-    gpu_options = tf.compat.v1.GPUOptions(per_process_gpu_memory_fraction=0.5)
+    gpu_options = tf.compat.v1.GPUOptions(per_process_gpu_memory_fraction=FLAGS.gpu_memory_fraction)
 
     config_proto = tf.compat.v1.ConfigProto(gpu_options=gpu_options)
 
     ###########################
     # Kicks off the training. #
     ###########################
-    with tf.contrib.tfprof.ProfileContext(FLAGS.train_dir,
-                                          trace_steps=range(1,10),
-                                          dump_steps=[10]) as pctx:
+    try:
+
+      status = _cudart.cudaProfilerStart()
+      if status != 0:
+        raise EnvironmentError()
+
       slim.learning.train(
-            train_tensor,
-            logdir=FLAGS.train_dir,
-            master=FLAGS.master,
-            is_chief=(FLAGS.task == 0),
-            init_fn=_get_init_fn(),
-            local_init_op=init_train_op,
-            summary_op=summary_op,
-            session_config=config_proto,
-            number_of_steps=FLAGS.max_number_of_steps,
-            log_every_n_steps=FLAGS.log_every_n_steps,
-            save_summaries_secs=FLAGS.save_summaries_secs,
-            save_interval_secs=FLAGS.save_interval_secs,
-            sync_optimizer=optimizer if FLAGS.sync_replicas else None)
-
-    # try:
-
-    #   status = _cudart.cudaProfilerStart()
-    #   if status != 0:
-    #     raise EnvironmentError()
-
-    #   slim.learning.train(
-    #       train_tensor,
-    #       logdir=FLAGS.train_dir,
-    #       master=FLAGS.master,
-    #       is_chief=(FLAGS.task == 0),
-    #       init_fn=_get_init_fn(),
-    #       local_init_op=init_train_op,
-    #       summary_op=summary_op,
-    #       session_config=config_proto,
-    #       number_of_steps=FLAGS.max_number_of_steps,
-    #       log_every_n_steps=FLAGS.log_every_n_steps,
-    #       save_summaries_secs=FLAGS.save_summaries_secs,
-    #       save_interval_secs=FLAGS.save_interval_secs,
-    #       sync_optimizer=optimizer if FLAGS.sync_replicas else None)
-    # finally:
-    #   if status == 0:
-    #     # if cuda profile start was successful
-    #     # then we stop
-    #     _cudart.cudaProfilerStop()
+          train_tensor,
+          logdir=FLAGS.train_dir,
+          master=FLAGS.master,
+          is_chief=(FLAGS.task == 0),
+          init_fn=_get_init_fn(),
+          local_init_op=init_train_op,
+          summary_op=summary_op,
+          session_config=config_proto,
+          number_of_steps=FLAGS.max_number_of_steps,
+          log_every_n_steps=FLAGS.log_every_n_steps,
+          save_summaries_secs=FLAGS.save_summaries_secs,
+          save_interval_secs=FLAGS.save_interval_secs,
+          sync_optimizer=optimizer if FLAGS.sync_replicas else None)
+    finally:
+      if status == 0:
+        # if cuda profile start was successful
+        # then we stop
+        _cudart.cudaProfilerStop()
         
 
 

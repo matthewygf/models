@@ -537,8 +537,9 @@ def main(_):
     #stop_hook = tf.train.StopAtStepHook(last_step=config.max_max_epoch * epoch_size)
     stop_hook = tf.train.StopAtStepHook(last_step=1000)
     # GPU Sharing stuff.
-    #tf.compat.v1.logging.info('GPU Memory fraction : %.3f' % FLAGS.gpu_memory_fraction)
-    gpu_options = tf.compat.v1.GPUOptions(allow_growth=True)
+    tf.compat.v1.logging.info('GPU Memory fraction : %.3f' % FLAGS.gpu_memory_fraction)
+    # gpu_options = tf.compat.v1.GPUOptions(allow_growth=True)
+    gpu_options = tf.compat.v1.GPUOptions(per_process_gpu_memory_fraction=FLAGS.gpu_memory_fraction)
     config_proto = tf.compat.v1.ConfigProto(gpu_options=gpu_options, allow_soft_placement=soft_placement)
     tf.compat.v1.logging.info("PROFILE STARTS !")
     status = _cudart.cudaProfilerStart()

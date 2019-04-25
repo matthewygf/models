@@ -55,6 +55,11 @@ resnet_50_v1_b8_cmd = ['python3', 'research/slim/train_image_classifier.py',
                          '--dataset_dir', '/datasets/cifar10',
                          '--model_name', 'resnet_v1_50',	
                          '--batch_size', '8']
+resnet_50_v1_b16_cmd = ['python3', 'research/slim/train_image_classifier.py', 
+                         '--dataset_name', 'cifar10',
+                         '--dataset_dir', '/datasets/cifar10',
+                         '--model_name', 'resnet_v1_50',	
+                         '--batch_size', '16']
 vgg_19_b8_cmd = ['python3', 'research/slim/train_image_classifier.py', 
                          '--dataset_name', 'cifar10',
                          '--dataset_dir', '/datasets/cifar10',
@@ -123,6 +128,7 @@ models_train = {
     'nasnet_batch_8': nasnet_b8_cmd,
     'resnet_50_batch8_cmd': resnet_50_b8_cmd,
     'resnet_v1_50_batch_8': resnet_50_v1_b8_cmd,
+    'resnet_v1_50_batch_16': resnet_50_v1_b16_cmd,
     'vgg19_batch_8': vgg_19_b8_cmd,
     'vgg16_batch_8': vgg_16_b8_cmd,
     'alexnet_v2_batch_8': alexnet_v2_b8_cmd,
@@ -309,7 +315,9 @@ def run(
 def main():
     # which one we should run in parallel
     sets = [
-            ['resnet_v1_50_batch_8']
+            ['resnet_v1_50_batch_16'],
+            #['resnet_v1_50_batch_16', 'mobilenet_v1_025_batch_32'],
+            #['resnet_v1_50_batch_16', 'ptb_word_lm']
             # ['mobilenet_v1_025_batch_32'],
             # ['mobilenet_v1_025_batch_32', 'mobilenet_v1_025_batch_32'],
             # ['mobilenet_v1_025_batch_32', 'mobilenet_v1_025_batch_32', 'mobilenet_v1_025_batch_32', 'mobilenet_v1_025_batch_32'],
