@@ -598,7 +598,8 @@ def main(_):
     init_train_op = tf.group(init_iterator_op, global_init_op, local_init_op, table_init_op)
 
     # GPU Sharing stuff.
-    gpu_options = tf.compat.v1.GPUOptions(allow_growth=True)
+    # gpu_options = tf.compat.v1.GPUOptions(allow_growth=True)
+    gpu_options = tf.compat.v1.GPUOptions(per_process_gpu_memory_fraction=0.5)
 
     config_proto = tf.compat.v1.ConfigProto(gpu_options=gpu_options)
 
@@ -606,8 +607,8 @@ def main(_):
     # Kicks off the training. #
     ###########################
     with tf.contrib.tfprof.ProfileContext(FLAGS.train_dir,
-                                          trace_steps=range(10,20),
-                                          dump_steps=[20]) as pctx:
+                                          trace_steps=range(1,10),
+                                          dump_steps=[10]) as pctx:
       slim.learning.train(
             train_tensor,
             logdir=FLAGS.train_dir,
