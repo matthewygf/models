@@ -227,7 +227,7 @@ def kill_process_safe(pid,
     err_file_paths.pop(i)
     #tracker.stop()
     #trackers.pop(i)
-    return pid, mean, num
+    return mean, num
     
 
 def run(
