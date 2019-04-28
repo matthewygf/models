@@ -198,6 +198,37 @@ def create_process(model_name, index, experiment_path, percent=0.0):
     p = subprocess.Popen(cmd, stdout=out, stderr=err)
     return (p, out, err, err_out_file, output_dir)
 
+def kill_process_safe(pid, 
+                      err_handle, 
+                      out_handle, 
+                      path, 
+                      ids, 
+                      accumulated_models, 
+                      mean_num_models,
+                      mean_time_p_steps,
+                      processes_list,
+                      err_logs,
+                      out_logs,
+                      start_times,
+                      err_file_paths):
+    err_handle.close()
+    out_handle.close()
+    path_i = path
+    num, mean = get_average_num_step(path_i)
+    model_index = ids[pid]
+    mean_num_models[model_index] = ((accumulated_models[model_index] * mean_num_models[model_index]) + num) / (accumulated_models[model_index] + 1.0)
+    mean_time_p_steps[model_index] = ((accumulated_models[model_index] * mean_time_p_steps[model_index]) + mean) / (accumulated_models[model_index] + 1.0)
+    accumulated_models[model_index] += 1.0
+    processes_list.pop(i)
+    err_logs.pop(i)
+    out_logs.pop(i)
+    start_times.pop(i)
+    err_file_paths.pop(i)
+    #tracker.stop()
+    #trackers.pop(i)
+    return pid, mean, num
+    
+
 def run(
     average_log, experiment_path, 
     experiment_set, total_length, 
@@ -256,29 +287,21 @@ def run(
                     poll = p.poll()
                     if poll is None:
                         print('Process %d still running' % pid)
+                    else:
+                        mean, num = kill_process_safe(pid, err, out, path, ids, accumulated_models, 
+                                                      mean_num_models, mean_time_p_steps, processes_list, err_logs, out_logs, start_times, err_file_paths)
+                        line = ("experiment set %d, experiment_run %d: %d process average num p step is %.4f and total number of step is: %d \n" % 
+                                (experiment_index, experiment_run, pid, mean, num))
+                        average_file.write(line)
                     current_time = time.time()
                     executed = current_time - start_time
                     print("checking the time, process %d been running for %d " % (pid,executed))
-                    if executed >= 60.0 * 5:
+                    if executed >= 60.0 * 5 and poll is not None:
                         # make sure we profile a few mins.
                         # to observe the interference
                         p.kill()
-                        err.close()
-                        out.close()
-                        path_i = path
-                        print(path_i) 
-                        num, mean = get_average_num_step(path_i)
-                        model_index = ids[pid]
-                        mean_num_models[model_index] = ((accumulated_models[model_index] * mean_num_models[model_index]) + num) / (accumulated_models[model_index] + 1.0)
-                        mean_time_p_steps[model_index] = ((accumulated_models[model_index] * mean_time_p_steps[model_index]) + mean) / (accumulated_models[model_index] + 1.0)
-                        accumulated_models[model_index] += 1.0
-                        processes_list.pop(i)
-                        err_logs.pop(i)
-                        out_logs.pop(i)
-                        start_times.pop(i)
-                        err_file_paths.pop(i)
-                        #tracker.stop()
-                        #trackers.pop(i)
+                        mean, num = kill_process_safe(pid, err, out, path, ids, accumulated_models, 
+                                                      mean_num_models, mean_time_p_steps, processes_list, err_logs, out_logs, start_times, err_file_paths)
                         line = ("experiment set %d, experiment_run %d: %d process average num p step is %.4f and total number of step is: %d \n" % 
                                     (experiment_index, experiment_run, pid, mean, num))
                         average_file.write(line)
