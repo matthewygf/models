@@ -29,6 +29,7 @@ import ctypes
 # not catching because lets error if we cant load it
 _cudart = ctypes.CDLL('libcudart.so')
 
+import time
 
 slim = tf.contrib.slim
 
@@ -631,7 +632,9 @@ def main(_):
         # if cuda profile start was successful
         # then we stop
         _cudart.cudaProfilerStop()
-        
+
+  
+  time.sleep(5)
 
 
 if __name__ == '__main__':
