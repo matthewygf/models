@@ -210,7 +210,8 @@ def kill_process_safe(pid,
                       err_logs,
                       out_logs,
                       start_times,
-                      err_file_paths):
+                      err_file_paths,
+                      i):
     err_handle.close()
     out_handle.close()
     path_i = path
@@ -289,7 +290,7 @@ def run(
                         print('Process %d still running' % pid)
                     else:
                         mean, num = kill_process_safe(pid, err, out, path, ids, accumulated_models, 
-                                                      mean_num_models, mean_time_p_steps, processes_list, err_logs, out_logs, start_times, err_file_paths)
+                                                      mean_num_models, mean_time_p_steps, processes_list, err_logs, out_logs, start_times, err_file_paths, i)
                         line = ("experiment set %d, experiment_run %d: %d process average num p step is %.4f and total number of step is: %d \n" % 
                                 (experiment_index, experiment_run, pid, mean, num))
                         average_file.write(line)
@@ -301,7 +302,7 @@ def run(
                         # to observe the interference
                         p.kill()
                         mean, num = kill_process_safe(pid, err, out, path, ids, accumulated_models, 
-                                                      mean_num_models, mean_time_p_steps, processes_list, err_logs, out_logs, start_times, err_file_paths)
+                                                      mean_num_models, mean_time_p_steps, processes_list, err_logs, out_logs, start_times, err_file_paths, i)
                         line = ("experiment set %d, experiment_run %d: %d process average num p step is %.4f and total number of step is: %d \n" % 
                                     (experiment_index, experiment_run, pid, mean, num))
                         average_file.write(line)
