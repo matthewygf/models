@@ -22,11 +22,13 @@ from datasets import cifar10
 from datasets import flowers
 from datasets import imagenet
 from datasets import mnist
+from datasets import visualwakewords
 
 # NEED TO FIXED THESE DATASET LOADING
 datasets_map = {
     'flowers': flowers,
     'mnist': mnist,
+    'visualwakewords': visualwakewords,
 }
 
 datasets_map_modified = {
