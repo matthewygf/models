@@ -124,7 +124,7 @@ ptb_word_lm_cmd = ['python3', 'tutorials/rnn/ptb/ptb_word_lm.py',
 debug_cmd = ['python3', 'test_nv.py']
 
 nvprof_prefix_cmd = ['nvprof', '--profile-from-start', 'off', 
-                     '--timeout', '180',
+                     '--timeout', '360',
                      '--csv',
                      '--metrics', 'achieved_occupancy,dram_utilization,ipc,l2_utilization,sm_efficiency'
                      ]
@@ -237,8 +237,6 @@ def kill_process_safe(pid,
                       out_logs,
                       start_times,
                       err_file_paths,
-                      tracker,
-                      trackers,
                       i):
     err_handle.close()
     out_handle.close()
@@ -253,8 +251,6 @@ def kill_process_safe(pid,
     out_logs.pop(i)
     start_times.pop(i)
     err_file_paths.pop(i)
-    tracker.stop()
-    trackers.pop(i)
     return mean, num
     
 _RUNS_PER_SET = 1
@@ -294,20 +290,16 @@ def run(
         out_logs = []
         err_file_paths = []
         start_times = []
-        trackers = []
         ids = {}
         percent = (1 / len(experiment_set)) - 0.075 # some overhead of cuda stuff i think :/
         for i, m in enumerate(experiment_set):
             start_time = time.time()
             p, out, err, path, out_dir = create_process(m, i, experiment_path, percent)
-            tracker = p_track.ProcessInfoTracker(out_dir, p.pid)
-            tracker.start()
             processes_list.append(p)
             err_logs.append(err)
             out_logs.append(out)
             start_times.append(start_time)
             err_file_paths.append(path)
-            trackers.append(tracker)
             ids[p.pid] = i
         should_stop = False
         sys_tracker = sys_track.SystemInfoTracker(experiment_path)
@@ -324,7 +316,7 @@ def run(
                 if len(processes_list) <= 0:
                     should_stop = True
 
-                for i,(p, err, out, start_time, path, tracker) in enumerate(zip(processes_list, err_logs, out_logs, start_times, err_file_paths, trackers)):
+                for i,(p, err, out, start_time, path) in enumerate(zip(processes_list, err_logs, out_logs, start_times, err_file_paths)):
                     poll = None
                     pid = p.pid
                     poll = p.poll()
@@ -332,7 +324,7 @@ def run(
                         print('Process %d still running' % pid)
                     else:
                         mean, num = kill_process_safe(pid, err, out, path, ids, accumulated_models, 
-                                                      mean_num_models, mean_time_p_steps, processes_list, err_logs, out_logs, start_times, err_file_paths, tracker, trackers, i)
+                                                      mean_num_models, mean_time_p_steps, processes_list, err_logs, out_logs, start_times, err_file_paths, i)
                         line = ("experiment set %d, experiment_run %d: %d process average num p step is %.4f and total number of step is: %d \n" % 
                                 (experiment_index, experiment_run, pid, mean, num))
                         average_file.write(line)
@@ -344,7 +336,7 @@ def run(
                         # to observe the interference
                         p.kill()
                         mean, num = kill_process_safe(pid, err, out, path, ids, accumulated_models, 
-                                                      mean_num_models, mean_time_p_steps, processes_list, err_logs, out_logs, start_times, err_file_paths,tracker, trackers, i)
+                                                      mean_num_models, mean_time_p_steps, processes_list, err_logs, out_logs, start_times, err_file_paths, i)
                         line = ("experiment set %d, experiment_run %d: %d process average num p step is %.4f and total number of step is: %d \n" % 
                                     (experiment_index, experiment_run, pid, mean, num))
                         average_file.write(line)
