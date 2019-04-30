@@ -126,7 +126,6 @@ debug_cmd = ['python3', 'test_nv.py']
 nvprof_prefix_cmd = ['nvprof', '--profile-from-start', 'off', 
                      '--timeout', str(60*5),
                      '--csv',
-                     '--metrics', 'achieved_occupancy,ipc,shared_utilization,sm_efficiency',
                      ]
 
 models_train = {
@@ -172,7 +171,7 @@ def get_average_num_step(file_path):
                 mean = (mean + float(time_elapsed)) / num
     return (num, mean)
 
-def create_process(model_name, index, experiment_path, percent=0.0, is_nvprof=False):
+def create_process(model_name, index, experiment_path, percent=0.0, is_nvprof=False, nvprof_args=None):
     execution_id = datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S-%f')
     output_dir_name = execution_id+model_name+str(index)
     if is_nvprof:
@@ -219,6 +218,8 @@ def create_process(model_name, index, experiment_path, percent=0.0, is_nvprof=Fa
         nvprof_log = os.path.join(train_dir, 'nvprof_log.log')
         nv_prefix = models_train['nvprof_prefix']
         nv_prefix += ['--log-file', nvprof_log]
+        if nvprof_args is not None:
+            nv_prefix += nvprof_args
         cmd = nv_prefix + cmd
 
     p = subprocess.Popen(cmd, stdout=out, stderr=err)
@@ -271,15 +272,17 @@ def run(
     is_single = len(experiment_set) == 1
 
     if is_single:
-        # we want to use nvprof once for single model.
+        # we want to use nvprof once for single model and obtain metrics.
         # then we proceed as normal to find correlation
-        nvp, out, err, path, out_dir = create_process(experiment_set[0], 1, experiment_path, 0.92, True)
+        nvp, out, err, path, out_dir = create_process(experiment_set[0], 1, experiment_path, 0.92, True, ['--metrics', 'achieved_occupancy,ipc,shared_utilization,sm_efficiency',])
         while nvp.poll() is None:
-            print("nvprof profiling %s" % experiment_set[0])
+            print("nvprof profiling metrics %s" % experiment_set[0])
             time.sleep(2)
         out.close()
         err.close()
         
+    # TODO: time line later, how many times do we do ?
+
     for experiment_run in range(_START, _START+_RUNS_PER_SET):
         if os.path.exists(average_log):
             average_file = open(average_log, mode='a+')
