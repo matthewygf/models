@@ -124,7 +124,7 @@ ptb_word_lm_cmd = ['python3', 'tutorials/rnn/ptb/ptb_word_lm.py',
 debug_cmd = ['python3', 'test_nv.py']
 
 nvprof_prefix_cmd = ['nvprof', '--profile-from-start', 'off', 
-                     '--timeout', '120',
+                     '--timeout', '180',
                      '--csv',
                      '--metrics', 'achieved_occupancy,dram_utilization,ipc,l2_utilization,sm_efficiency'
                      ]
@@ -273,11 +273,11 @@ def run(
     is_single = len(experiment_set) == 1
 
     if is_single:
-        # we want to profile nvprof once.
-        # then we proceed as normal
+        # we want to use nvprof once for single model.
+        # then we proceed as normal to find correlation
         nvp, out, err, path, out_dir = create_process(experiment_set[0], 1, experiment_path, 0.92, True)
         while nvp.poll() is None:
-            print("nvprof profiling")
+            print("nvprof profiling %s" % experiment_set[0])
             time.sleep(2)
         out.close()
         err.close()
@@ -298,25 +298,25 @@ def run(
         for i, m in enumerate(experiment_set):
             start_time = time.time()
             p, out, err, path, out_dir = create_process(m, i, experiment_path, percent)
-            #tracker = p_track.ProcessInfoTracker(out_dir, p.pid)
-            #tracker.start()
+            tracker = p_track.ProcessInfoTracker(out_dir, p.pid)
+            tracker.start()
             processes_list.append(p)
             err_logs.append(err)
             out_logs.append(out)
             start_times.append(start_time)
             err_file_paths.append(path)
-            #trackers.append(tracker)
+            trackers.append(tracker)
             ids[p.pid] = i
         should_stop = False
-        #sys_tracker = sys_track.SystemInfoTracker(experiment_path)
+        sys_tracker = sys_track.SystemInfoTracker(experiment_path)
 
         try:
             smi_file_path = os.path.join(experiment_path, 'smi.log') 
             smi_file = open(smi_file_path, 'a+')
             nvidia_smi_cmd = ['watch', '-n', '0.2', 'nvidia-smi', '--query-gpu=memory.used,memory.total,utilization.gpu,utilization.memory,power.draw', '--format=noheader,csv', '|', 'tee', '-a' , experiment_path+'/smi_watch.log']
-            #smi_p = subprocess.Popen(nvidia_smi_cmd, stdout=smi_file, stderr=smi_file)
-            #smi_poll = None
-            #sys_tracker.start()
+            smi_p = subprocess.Popen(nvidia_smi_cmd, stdout=smi_file, stderr=smi_file)
+            smi_poll = None
+            sys_tracker.start()
             while not should_stop:
                 time.sleep(5)
                 if len(processes_list) <= 0:
@@ -348,29 +348,29 @@ def run(
                         average_file.write(line)
                         
 
-                #smi_poll = smi_p.poll()
-                #if smi_poll is None:
-                #    print('NVIDIA_SMI Process %d still running' % smi_p.pid)
+                smi_poll = smi_p.poll()
+                if smi_poll is None:
+                    print('NVIDIA_SMI Process %d still running' % smi_p.pid)
 
             print('total experiments: %d, experiment_run %d , finished %d' % (total_length-1, experiment_run, experiment_index))
 
         except KeyboardInterrupt:
-            #smi_p.kill()
-            #smi_file.close()
+            smi_p.kill()
+            smi_file.close()
             for p, err, out in zip(processes_list, err_logs, out_logs):
                 pid = p.pid
                 p.kill()
                 err.close()
                 out.close()
                 print('%d killed ! ! !' % pid)
-        # finally:
-        #     # smi_poll = smi_p.poll()
-        #     # if smi_poll is None:
-        #     #     smi_p.kill()
-        #     #     smi_file.close()
+        finally:
+             smi_poll = smi_p.poll()
+             if smi_poll is None:
+                smi_p.kill()
+                smi_file.close()
 
         average_file.close()
-        #sys_tracker.stop()
+        sys_tracker.stop()
 
     # Experiment average size.
     average_file = open(average_log, mode='a+')
@@ -383,16 +383,22 @@ def main():
     # which one we should run in parallel
     sets = [
             #['debug'] 
-            #['resnet_v1_50_batch_8'],
-            #['resnet_v1_50_batch_8', 'resnet_v1_50_batch_8']
-            #['resnet_v1_50_batch_8', 'mobilenet_v1_025_batch_32'],
-            #['resnet_v1_50_batch_8', 'ptb_word_lm']
-             ['mobilenet_v1_025_batch_32'],
+            ['resnet_v1_50_batch_8'],
+            # ['resnet_v1_50_batch_8', 'resnet_v1_50_batch_8']
+            # ['resnet_v1_50_batch_8', 'mobilenet_v1_025_batch_32'],
+            # ['resnet_v1_50_batch_8', 'ptb_word_lm']
+            # ['mobilenet_v1_025_batch_32'],
             # ['mobilenet_v1_025_batch_32', 'mobilenet_v1_025_batch_32'],
-            # ['mobilenet_v1_025_batch_32', 'mobilenet_v1_025_batch_32', 'mobilenet_v1_025_batch_32', 'mobilenet_v1_025_batch_32'],
             # ['ptb_word_lm'],
             # ['ptb_word_lm', 'ptb_word_lm'],
             # ['ptb_word_lm', 'mobilenet_v1_025_batch_32'],
+            # ['mobilenet_v1_025_batch_48'],
+            # ['mobilenet_v1_025_batch_48', 'mobilenet_v1_025_batch_48'],
+            # ['mobilenet_v1_025_batch_48', 'ptb_word_lm'],
+            # ['resnet_v1_50_batch_16'],
+            # ['resnet_v1_50_batch_16', 'resnet_v1_50_batch_16'],
+            # ['resnet_v1_50_batch_16', 'ptb_word_lm']
+
             # ['ptb_word_lm', 'mobilenet_v1_025_batch_32', 'mobilenet_v1_025_batch_32'],
             # ['ptb_word_lm', 'ptb_word_lm', 'ptb_word_lm', 'ptb_word_lm'], 
             # ['ptb_word_lm', 'mobilenet_v1_025_batch_32', 'ptb_word_lm', 'mobilenet_v1_025_batch_32'],
