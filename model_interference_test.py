@@ -311,6 +311,7 @@ def run(
             nvprof_all_cmd = ['nvprof', '--profile-all-processes', '--csv']
 
             prof_timeline = subprocess.Popen(nvprof_all_cmd, stdout=timeline_file, stderr=timeline_file)
+            prof_poll = None
 
         try:
             smi_file_path = os.path.join(experiment_path, 'smi_out.log') 
@@ -370,6 +371,10 @@ def run(
              if smi_poll is None:
                 smi_p.kill()
                 smi_file.close()
+
+        prof_poll = prof_timeline.poll()
+        if experiment_run == 1 and prof_poll is None:
+            prof_timeline.kill()
 
         average_file.close()
         sys_tracker.stop()
