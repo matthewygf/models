@@ -147,7 +147,8 @@ models_train = {
     'inceptionv4_batch_8': inception_v4_b8_cmd,
     'resnet_101_v1_batch_8': resnet_101_v1_b8_cmd,
     'resnet_151_v1_batch_8': resnet_152_v1_b8_cmd,
-    'debug': debug_cmd
+    'debug': debug_cmd,
+    'nvprof_prefix': nvprof_prefix_cmd
 }
 
 def process(line):
@@ -214,8 +215,9 @@ def create_process(model_name, index, experiment_path, percent=0.0, is_nvprof=Fa
     
     if is_nvprof:
         nvprof_log = os.path.join(train_dir, 'nvprof_log.log')
-        nvprof_prefix_cmd += ['--log-file', nvprof_log]
-        cmd = nvprof_prefix_cmd + cmd
+        nv_prefix = models_train['nvprof_prefix']
+        nv_prefix += ['--log-file', nvprof_log]
+        cmd = nv_prefix + cmd
 
     p = subprocess.Popen(cmd, stdout=out, stderr=err)
     return (p, out, err, err_out_file, output_dir)
