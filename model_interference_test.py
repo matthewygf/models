@@ -306,7 +306,7 @@ def run(
         # 2. we should do a timeline profile.
         if experiment_run == 1:
             # nvprof timeline here
-            timeline_file_path = os.path.join(experiment_path, experiment_index)
+            timeline_file_path = os.path.join(experiment_path, str(experiment_index))
             timeline_file_path = os.path.join(timeline_file_path, 'timeline_err.log')
             if not os.path.exists(timeline_file_path):
                 os.makedirs(timeline_file_path)
