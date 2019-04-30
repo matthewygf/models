@@ -274,7 +274,7 @@ def run(
     if is_single:
         # we want to use nvprof once for single model and obtain metrics.
         # then we proceed as normal to find correlation
-        nvp, out, err, path, out_dir = create_process(experiment_set[0], 1, experiment_path, 0.92, True, ['--metrics', 'achieved_occupancy,ipc,shared_utilization,sm_efficiency',])
+        nvp, out, err, path, out_dir = create_process(experiment_set[0], 1, experiment_path, 0.92, True, ['--metrics', 'achieved_occupancy,ipc,sm_efficiency',])
         while nvp.poll() is None:
             print("nvprof profiling metrics %s" % experiment_set[0])
             time.sleep(2)
@@ -310,7 +310,9 @@ def run(
         try:
             smi_file_path = os.path.join(experiment_path, 'smi_out.log') 
             smi_file = open(smi_file_path, 'a+')
-            nvidia_smi_cmd = ['watch', '-n', '0.2', 'nvidia-smi', '--query-gpu=memory.used,memory.total,utilization.gpu,utilization.memory,power.draw', '--format=noheader,csv', '|', 'tee', '-a' , experiment_path+'/smi_watch.csv']
+            nvidia_smi_cmd = ['watch', '-n', '0.2', 'nvidia-smi', 
+                              '--query-gpu=memory.used,memory.total,utilization.gpu,utilization.memory,power.draw', 
+                              '--format=noheader,csv', '|', 'tee', '-a' , experiment_path+'/smi_watch.csv']
             smi_p = subprocess.Popen(nvidia_smi_cmd, stdout=smi_file, stderr=smi_file)
             smi_poll = None
             sys_tracker.start()
