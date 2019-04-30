@@ -274,7 +274,7 @@ def run(
     if is_single:
         # we want to use nvprof once for single model and obtain metrics.
         # then we proceed as normal to find correlation
-        nvp, out, err, path, out_dir = create_process(experiment_set[0], 1, experiment_path, 0.92, True, ['--metrics', 'achieved_occupancy,ipc,sm_efficiency',])
+        nvp, out, err, path, out_dir = create_process(experiment_set[0], 1, experiment_path, 0.92, True, ['--metrics', 'achieved_occupancy,ipc,sm_efficiency,dram_write_transactions,dram_read_transactions',])
         while nvp.poll() is None:
             print("nvprof profiling metrics %s" % experiment_set[0])
             time.sleep(2)
