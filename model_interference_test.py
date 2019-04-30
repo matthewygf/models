@@ -306,7 +306,10 @@ def run(
         # 2. we should do a timeline profile.
         if experiment_run == 1:
             # nvprof timeline here
-            timeline_file_path = os.path.join(experiment_path, 'timeline_err.log')
+            timeline_file_path = os.path.join(experiment_path, experiment_index)
+            timeline_file_path = os.path.join(timeline_file_path, 'timeline_err.log')
+            if not os.path.exists(timeline_file_path):
+                os.makedirs(timeline_file_path)
             timeline_file = open(timeline_file_path, 'a+')
             nvprof_all_cmd = ['nvprof', '--profile-all-processes', '--print-gpu-trace', '--csv']
 
@@ -392,20 +395,20 @@ def main():
     sets = [
             #['debug'] 
             ['resnet_v1_50_batch_8'],
-            # ['resnet_v1_50_batch_16'],
-            # ['mobilenet_v1_025_batch_32'],
-            # ['mobilenet_v1_025_batch_48'],
-            # ['ptb_word_lm'],
-            # ['resnet_v1_50_batch_8', 'resnet_v1_50_batch_8']
-            # ['resnet_v1_50_batch_8', 'mobilenet_v1_025_batch_32'],
-            # ['resnet_v1_50_batch_8', 'ptb_word_lm']
-            # ['mobilenet_v1_025_batch_32', 'mobilenet_v1_025_batch_32'],
-            # ['ptb_word_lm', 'ptb_word_lm'],
-            # ['ptb_word_lm', 'mobilenet_v1_025_batch_32'],
-            # ['mobilenet_v1_025_batch_48', 'mobilenet_v1_025_batch_48'],
-            # ['mobilenet_v1_025_batch_48', 'ptb_word_lm'],
-            # ['resnet_v1_50_batch_16', 'resnet_v1_50_batch_16'],
-            # ['resnet_v1_50_batch_16', 'ptb_word_lm']
+            ['resnet_v1_50_batch_16'],
+            ['mobilenet_v1_025_batch_32'],
+            ['mobilenet_v1_025_batch_48'],
+            ['ptb_word_lm'],
+            ['resnet_v1_50_batch_8', 'resnet_v1_50_batch_8']
+            ['resnet_v1_50_batch_8', 'mobilenet_v1_025_batch_32'],
+            ['resnet_v1_50_batch_8', 'ptb_word_lm']
+            ['mobilenet_v1_025_batch_32', 'mobilenet_v1_025_batch_32'],
+            ['ptb_word_lm', 'ptb_word_lm'],
+            ['ptb_word_lm', 'mobilenet_v1_025_batch_32'],
+            ['mobilenet_v1_025_batch_48', 'mobilenet_v1_025_batch_48'],
+            ['mobilenet_v1_025_batch_48', 'ptb_word_lm'],
+            ['resnet_v1_50_batch_16', 'resnet_v1_50_batch_16'],
+            ['resnet_v1_50_batch_16', 'ptb_word_lm']
 
             # ['ptb_word_lm', 'mobilenet_v1_025_batch_32', 'mobilenet_v1_025_batch_32'],
             # ['ptb_word_lm', 'ptb_word_lm', 'ptb_word_lm', 'ptb_word_lm'], 
