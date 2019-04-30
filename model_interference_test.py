@@ -126,7 +126,7 @@ debug_cmd = ['python3', 'test_nv.py']
 nvprof_prefix_cmd = ['nvprof', '--profile-from-start', 'off', 
                      '--timeout', '25', 
                      '--csv',
-                     '--metrics', 'achieved_occupancy,dram_utilization,ipc,l2_utilization,pcie_total_data_received,pcie_total_data_transmitted,sm_efficiency,stall_constant_memory_dependency,warp_execution_efficiency'
+                     '--metrics', 'achieved_occupancy,dram_utilization,ipc,l2_utilization,sm_efficiency'
                      ]
 
 models_train = {
@@ -174,9 +174,10 @@ def get_average_num_step(file_path):
 
 def create_process(model_name, index, experiment_path, percent=0.0, is_nvprof=False):
     execution_id = datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S-%f')
-    output_dir = os.path.join(experiment_path, execution_id+model_name+str(index))
+    output_dir_name = execution_id+model_name+str(index)
     if is_nvprof:
-        output_dir = os.path.join(output_dir, 'nvprof')
+        output_dir_name += 'nvprof'
+    output_dir = os.path.join(experiment_path, output_dir_name)
     output_file = os.path.join(output_dir, 'output.log') 
     err_out_file = os.path.join(output_dir, 'err.log') 
     train_dir = os.path.join(output_dir, 'experiment')
