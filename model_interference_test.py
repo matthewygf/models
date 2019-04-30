@@ -1,3 +1,4 @@
+#!/home/metalabadmin/anaconda3/envs/nvprof_env/bin/python3
 import os
 import signal
 import time
@@ -119,6 +120,10 @@ ptb_word_lm_cmd = ['python3', 'tutorials/rnn/ptb/ptb_word_lm.py',
                    '--model','small',
                    '--rnn_mode', 'cudnn'
                   ]
+
+
+debug_cmd = ['python3', 'test_nv.py']
+
 models_train = {
     'mobilenet_v2_035_batch_16': mobile_net_v2_035_b16_cmd,
     'mobilenet_v1_025_batch_40': mobile_net_v1_025_cmd,
@@ -137,7 +142,8 @@ models_train = {
     'inceptionv3_batch_8': inception_v3_b8_cmd,
     'inceptionv4_batch_8': inception_v4_b8_cmd,
     'resnet_101_v1_batch_8': resnet_101_v1_b8_cmd,
-    'resnet_151_v1_batch_8': resnet_152_v1_b8_cmd
+    'resnet_151_v1_batch_8': resnet_152_v1_b8_cmd,
+    'debug':debug_cmd
 }
 
 def process(line):
@@ -185,7 +191,7 @@ def create_process(model_name, index, experiment_path, percent=0.0):
         data_path = ['--data_path', data_path_simple]
         cmd += data_path
     else:
-        timestep_num = '180'
+        timestep_num = '20' 
         if 'mobile' in model_name:
             timestep_num = '250'
         timestep = ['--max_number_of_steps', timestep_num]
@@ -342,11 +348,12 @@ def run(
 def main():
     # which one we should run in parallel
     sets = [
-            ['resnet_v1_50_batch_8'],
+            #['debug'] 
+            #['resnet_v1_50_batch_8'],
             #['resnet_v1_50_batch_8', 'resnet_v1_50_batch_8']
             #['resnet_v1_50_batch_8', 'mobilenet_v1_025_batch_32'],
             #['resnet_v1_50_batch_8', 'ptb_word_lm']
-            # ['mobilenet_v1_025_batch_32'],
+             ['mobilenet_v1_025_batch_32'],
             # ['mobilenet_v1_025_batch_32', 'mobilenet_v1_025_batch_32'],
             # ['mobilenet_v1_025_batch_32', 'mobilenet_v1_025_batch_32', 'mobilenet_v1_025_batch_32', 'mobilenet_v1_025_batch_32'],
             # ['ptb_word_lm'],
