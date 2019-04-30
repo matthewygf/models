@@ -124,9 +124,9 @@ ptb_word_lm_cmd = ['python3', 'tutorials/rnn/ptb/ptb_word_lm.py',
 debug_cmd = ['python3', 'test_nv.py']
 
 nvprof_prefix_cmd = ['nvprof', '--profile-from-start', 'off', 
-                     '--timeout', '540',
+                     '--timeout', str(60*5),
                      '--csv',
-                     '--metrics', 'achieved_occupancy,ipc,local_hit_rate,sm_efficiency'
+                     '--metrics', 'achieved_occupancy,ipc,shared_utilization,sm_efficiency',
                      ]
 
 models_train = {
