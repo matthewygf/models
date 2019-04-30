@@ -1,4 +1,4 @@
-#!/home/metalabadmin/anaconda3/envs/nvprof_env/bin/python3
+
 import os
 import signal
 import time
@@ -121,8 +121,12 @@ ptb_word_lm_cmd = ['python3', 'tutorials/rnn/ptb/ptb_word_lm.py',
                    '--rnn_mode', 'cudnn'
                   ]
 
-
 debug_cmd = ['python3', 'test_nv.py']
+
+nvprof_prefix_cmd = ['nvprof', '--profile-from-start', 'off', 
+                     '--timeout', '10', '--csv' ,
+                     '--metrics', 'achieved_occupancy,dram_utilization,ipc,l2_utilization,pcie_total_data_received,pcie_total_data_transmitted,sm_efficiency,stall_constant_memory_dependency,warp_execution_efficiency'
+                     ]
 
 models_train = {
     'mobilenet_v2_035_batch_16': mobile_net_v2_035_b16_cmd,
@@ -143,7 +147,7 @@ models_train = {
     'inceptionv4_batch_8': inception_v4_b8_cmd,
     'resnet_101_v1_batch_8': resnet_101_v1_b8_cmd,
     'resnet_151_v1_batch_8': resnet_152_v1_b8_cmd,
-    'debug':debug_cmd
+    'debug': debug_cmd
 }
 
 def process(line):
@@ -166,9 +170,11 @@ def get_average_num_step(file_path):
                 mean = (mean + float(time_elapsed)) / num
     return (num, mean)
 
-def create_process(model_name, index, experiment_path, percent=0.0):
+def create_process(model_name, index, experiment_path, percent=0.0, is_nvprof=False):
     execution_id = datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S-%f')
     output_dir = os.path.join(experiment_path, execution_id+model_name+str(index))
+    if is_nvprof:
+        output_dir = os.path.join(output_dir, 'nvprof')
     output_file = os.path.join(output_dir, 'output.log') 
     err_out_file = os.path.join(output_dir, 'err.log') 
     train_dir = os.path.join(output_dir, 'experiment')
@@ -190,16 +196,26 @@ def create_process(model_name, index, experiment_path, percent=0.0):
         data_path_simple = os.path.join(data_path_simple, 'data')
         data_path = ['--data_path', data_path_simple]
         cmd += data_path
+        timestep = ['--max_number_of_steps', 2000]
     else:
-        timestep_num = '20' 
-        if 'mobile' in model_name:
-            timestep_num = '250'
+        if is_nvprof:
+            timestep_num = '20'
+        else:
+            timestep_num = '150' 
+            if 'mobile' in model_name:
+                timestep_num = '250'
         timestep = ['--max_number_of_steps', timestep_num]
-        cmd += timestep
+
+    cmd += timestep
 
     if percent > 0.0:
         gpu_mem_opts = ['--gpu_memory_fraction', str(percent)] 
         cmd += gpu_mem_opts
+    
+    if is_nvprof:
+        nvprof_log = os.path.join(train_dir, 'nvprof_log.log')
+        nvprof_prefix_cmd += ['--log-file', nvprof_log]
+        cmd = nvprof_prefix_cmd + cmd
 
     p = subprocess.Popen(cmd, stdout=out, stderr=err)
     return (p, out, err, err_out_file, output_dir)
@@ -235,6 +251,8 @@ def kill_process_safe(pid,
     #trackers.pop(i)
     return mean, num
     
+_RUNS_PER_SET = 1
+_START = 1
 
 def run(
     average_log, experiment_path, 
@@ -248,7 +266,19 @@ def run(
     mean_time_p_steps = np.zeros(len(experiment_set), dtype=float)
     accumulated_models = np.zeros(len(experiment_set), dtype=float)
 
-    for experiment_run in range(1, 2):
+    is_single = len(experiment_set) == 1
+
+    if is_single:
+        # we want to profile nvprof once.
+        # then we proceed as normal
+        nvp, out, err, path, out_dir = create_process(experiment_set[0], 1, experiment_path, 0.92, True)
+        while nvp.poll() is None:
+            time.sleep(2)
+        out.close()
+        err.close()
+        
+
+    for experiment_run in range(_START, _START+_RUNS_PER_SET):
         if os.path.exists(average_log):
             average_file = open(average_log, mode='a+')
         else:

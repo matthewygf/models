@@ -16,7 +16,8 @@
 
 
 import os
-os.environ["CUDA_VISIBLE_DEVICES"]="3"
+# NOTE: this cause NVPROF --metrics to not work  :O
+# os.environ["CUDA_VISIBLE_DEVICES"]="3"
 
 import tensorflow as tf
 
