@@ -307,8 +307,6 @@ def run(
         if experiment_run == 1:
             # nvprof timeline here
             timeline_file_path = os.path.join(experiment_path, 'timeline_err.log')
-            if not os.path.exists(timeline_file_path):
-                os.makedirs(timeline_file_path)
             timeline_file = open(timeline_file_path, 'a+')
             nvprof_all_cmd = ['nvprof', '--profile-all-processes', '--print-gpu-trace', '--csv']
 
