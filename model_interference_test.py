@@ -308,7 +308,7 @@ def run(
             # nvprof timeline here
             timeline_file_path = os.path.join(experiment_path, 'timeline_err.log')
             timeline_file = open(timeline_file_path, 'a+')
-            nvprof_all_cmd = ['nvprof', '--profile-all-processes', '--csv']
+            nvprof_all_cmd = ['nvprof', '--profile-all-processes', '--print-gpu-trace', '--csv']
 
             prof_timeline = subprocess.Popen(nvprof_all_cmd, stdout=timeline_file, stderr=timeline_file)
             prof_poll = None
@@ -375,6 +375,7 @@ def run(
         prof_poll = prof_timeline.poll()
         if experiment_run == 1 and prof_poll is None:
             prof_timeline.kill()
+            timeline_file.close()
 
         average_file.close()
         sys_tracker.stop()
