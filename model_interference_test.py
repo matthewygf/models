@@ -126,7 +126,7 @@ debug_cmd = ['python3', 'test_nv.py']
 nvprof_prefix_cmd = ['nvprof', '--profile-from-start', 'off', 
                      '--timeout', '540',
                      '--csv',
-                     '--metrics', 'achieved_occupancy,dram_utilization,ipc,l2_utilization,sm_efficiency'
+                     '--metrics', 'achieved_occupancy,ipc,local_hit_rate,sm_efficiency'
                      ]
 
 models_train = {
@@ -307,7 +307,7 @@ def run(
         try:
             smi_file_path = os.path.join(experiment_path, 'smi_out.log') 
             smi_file = open(smi_file_path, 'a+')
-            nvidia_smi_cmd = ['watch', '-n', '0.2', 'nvidia-smi', '--query-gpu=memory.used,memory.total,utilization.gpu,utilization.memory,power.draw', '--format=noheader,csv', '|', 'tee', '-a' , experiment_path+'/smi_watch.log']
+            nvidia_smi_cmd = ['watch', '-n', '0.2', 'nvidia-smi', '--query-gpu=memory.used,memory.total,utilization.gpu,utilization.memory,power.draw', '--format=noheader,csv', '|', 'tee', '-a' , experiment_path+'/smi_watch.csv']
             smi_p = subprocess.Popen(nvidia_smi_cmd, stdout=smi_file, stderr=smi_file)
             smi_poll = None
             sys_tracker.start()
