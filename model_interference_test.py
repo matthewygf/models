@@ -237,6 +237,8 @@ def kill_process_safe(pid,
                       out_logs,
                       start_times,
                       err_file_paths,
+                      tracker,
+                      trackers,
                       i):
     err_handle.close()
     out_handle.close()
@@ -251,8 +253,8 @@ def kill_process_safe(pid,
     out_logs.pop(i)
     start_times.pop(i)
     err_file_paths.pop(i)
-    #tracker.stop()
-    #trackers.pop(i)
+    tracker.stop()
+    trackers.pop(i)
     return mean, num
     
 _RUNS_PER_SET = 1
@@ -322,7 +324,7 @@ def run(
                 if len(processes_list) <= 0:
                     should_stop = True
 
-                for i,(p, err, out, start_time, path) in enumerate(zip(processes_list, err_logs, out_logs, start_times, err_file_paths)):
+                for i,(p, err, out, start_time, path, tracker) in enumerate(zip(processes_list, err_logs, out_logs, start_times, err_file_paths, trackers)):
                     poll = None
                     pid = p.pid
                     poll = p.poll()
@@ -330,7 +332,7 @@ def run(
                         print('Process %d still running' % pid)
                     else:
                         mean, num = kill_process_safe(pid, err, out, path, ids, accumulated_models, 
-                                                      mean_num_models, mean_time_p_steps, processes_list, err_logs, out_logs, start_times, err_file_paths, i)
+                                                      mean_num_models, mean_time_p_steps, processes_list, err_logs, out_logs, start_times, err_file_paths, tracker, trackers, i)
                         line = ("experiment set %d, experiment_run %d: %d process average num p step is %.4f and total number of step is: %d \n" % 
                                 (experiment_index, experiment_run, pid, mean, num))
                         average_file.write(line)
@@ -342,7 +344,7 @@ def run(
                         # to observe the interference
                         p.kill()
                         mean, num = kill_process_safe(pid, err, out, path, ids, accumulated_models, 
-                                                      mean_num_models, mean_time_p_steps, processes_list, err_logs, out_logs, start_times, err_file_paths, i)
+                                                      mean_num_models, mean_time_p_steps, processes_list, err_logs, out_logs, start_times, err_file_paths,tracker, trackers, i)
                         line = ("experiment set %d, experiment_run %d: %d process average num p step is %.4f and total number of step is: %d \n" % 
                                     (experiment_index, experiment_run, pid, mean, num))
                         average_file.write(line)
