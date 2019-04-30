@@ -58,7 +58,6 @@ $ python ptb_word_lm.py --data_path=simple-examples/data/
 
 
 import os
-os.environ["CUDA_VISIBLE_DEVICES"]="3"
 
 import time
 

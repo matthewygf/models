@@ -122,7 +122,7 @@ debug_cmd = ['python3', 'test_nv.py']
 nvprof_prefix_cmd = ['nvprof', '--profile-from-start', 'off', 
                      '--timeout', str(60*2),
                      '--csv',
-                     ]
+                    ]
 models_train = {
     'mobilenet_v2_035_batch_16': mobile_net_v2_035_b16_cmd,
     'mobilenet_v1_025_batch_40': mobile_net_v1_025_cmd,
@@ -249,7 +249,7 @@ def kill_process_safe(pid,
     err_file_paths.pop(i)
     return mean, num
     
-_RUNS_PER_SET = 5
+_RUNS_PER_SET = 1
 _START = 1
 
 def run(
@@ -266,6 +266,10 @@ def run(
 
     is_single = len(experiment_set) == 1
 
+    nvidia_smi_cmd = ['watch', '-n', '0.2', 'nvidia-smi', 
+                              '--query-gpu=memory.used,memory.total,utilization.gpu,utilization.memory,power.draw', 
+                              '--format=noheader,csv', '|', 'tee', '-a' , experiment_path+'/smi_watch.csv']
+
     if is_single:
         # 1. we want to use nvprof once for single model and obtain metrics.
         nvp, out, err, path, out_dir = create_process(experiment_set[0], 1, experiment_path, 0.92, True, ['--metrics', 'achieved_occupancy,ipc,sm_efficiency,dram_write_transactions,dram_read_transactions,dram_utilization',])
@@ -275,9 +279,6 @@ def run(
         out.close()
         err.close()
         
-    # 2. we should do a timeline profile.
-    # TODO: time line later, how many times do we do ?
-
     for experiment_run in range(_START, _START+_RUNS_PER_SET):
         if os.path.exists(average_log):
             average_file = open(average_log, mode='a+')
@@ -302,12 +303,19 @@ def run(
         should_stop = False
         sys_tracker = sys_track.SystemInfoTracker(experiment_path)
 
+        # 2. we should do a timeline profile.
+        if experiment_run == 1:
+            # nvprof timeline here
+            timeline_file_path = os.path.join(experiment_path, 'timeline_err.log')
+            timeline_file = open(timeline_file_path, 'a+')
+            nvprof_all_cmd = ['nvprof', '--profile-all-processes', '--csv']
+
+            prof_timeline = subprocess.Popen(nvprof_all_cmd, stdout=timeline_file, stderr=timeline_file)
+
         try:
             smi_file_path = os.path.join(experiment_path, 'smi_out.log') 
             smi_file = open(smi_file_path, 'a+')
-            nvidia_smi_cmd = ['watch', '-n', '0.2', 'nvidia-smi', 
-                              '--query-gpu=memory.used,memory.total,utilization.gpu,utilization.memory,power.draw', 
-                              '--format=noheader,csv', '|', 'tee', '-a' , experiment_path+'/smi_watch.csv']
+            
             smi_p = subprocess.Popen(nvidia_smi_cmd, stdout=smi_file, stderr=smi_file)
             smi_poll = None
             sys_tracker.start()
@@ -376,12 +384,12 @@ def run(
 def main():
     # which one we should run in parallel
     sets = [
-            #['debug'] 
+            ['debug','debug'] 
             # ['resnet_v1_50_batch_8'],
             # ['resnet_v1_50_batch_16'],
             # ['mobilenet_v1_025_batch_32'],
             # ['mobilenet_v1_025_batch_48'],
-            ['ptb_word_lm'],
+            # ['ptb_word_lm'],
             # ['resnet_v1_50_batch_8', 'resnet_v1_50_batch_8']
             # ['resnet_v1_50_batch_8', 'mobilenet_v1_025_batch_32'],
             # ['resnet_v1_50_batch_8', 'ptb_word_lm']
