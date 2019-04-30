@@ -33,8 +33,6 @@ nasnet_b8_cmd = ['python3', 'research/slim/train_image_classifier.py',
                          '--dataset_dir', '/datasets/cifar10',
                          '--model_name', 'nasnet_cifar',	
                          '--batch_size', '8']
-
-
 resnet_50_b32_cmd = ['python3', 'research/slim/train_image_classifier.py', 
                          '--dataset_name', 'cifar10',
                          '--dataset_dir', '/datasets/cifar10',
@@ -120,14 +118,11 @@ ptb_word_lm_cmd = ['python3', 'tutorials/rnn/ptb/ptb_word_lm.py',
                    '--model','small',
                    '--rnn_mode', 'cudnn'
                   ]
-
 debug_cmd = ['python3', 'test_nv.py']
-
 nvprof_prefix_cmd = ['nvprof', '--profile-from-start', 'off', 
-                     '--timeout', str(60*5),
+                     '--timeout', str(60*2),
                      '--csv',
                      ]
-
 models_train = {
     'mobilenet_v2_035_batch_16': mobile_net_v2_035_b16_cmd,
     'mobilenet_v1_025_batch_40': mobile_net_v1_025_cmd,
@@ -254,7 +249,7 @@ def kill_process_safe(pid,
     err_file_paths.pop(i)
     return mean, num
     
-_RUNS_PER_SET = 1
+_RUNS_PER_SET = 5
 _START = 1
 
 def run(
@@ -272,8 +267,7 @@ def run(
     is_single = len(experiment_set) == 1
 
     if is_single:
-        # we want to use nvprof once for single model and obtain metrics.
-        # then we proceed as normal to find correlation
+        # 1. we want to use nvprof once for single model and obtain metrics.
         nvp, out, err, path, out_dir = create_process(experiment_set[0], 1, experiment_path, 0.92, True, ['--metrics', 'achieved_occupancy,ipc,sm_efficiency,dram_write_transactions,dram_read_transactions,dram_utilization',])
         while nvp.poll() is None:
             print("nvprof profiling metrics %s" % experiment_set[0])
@@ -281,6 +275,7 @@ def run(
         out.close()
         err.close()
         
+    # 2. we should do a timeline profile.
     # TODO: time line later, how many times do we do ?
 
     for experiment_run in range(_START, _START+_RUNS_PER_SET):
@@ -383,18 +378,18 @@ def main():
     sets = [
             #['debug'] 
             ['resnet_v1_50_batch_8'],
+            ['resnet_v1_50_batch_16'],
+            ['mobilenet_v1_025_batch_32'],
+            ['mobilenet_v1_025_batch_48'],
+            ['ptb_word_lm'],
             # ['resnet_v1_50_batch_8', 'resnet_v1_50_batch_8']
             # ['resnet_v1_50_batch_8', 'mobilenet_v1_025_batch_32'],
             # ['resnet_v1_50_batch_8', 'ptb_word_lm']
-            # ['mobilenet_v1_025_batch_32'],
             # ['mobilenet_v1_025_batch_32', 'mobilenet_v1_025_batch_32'],
-            # ['ptb_word_lm'],
             # ['ptb_word_lm', 'ptb_word_lm'],
             # ['ptb_word_lm', 'mobilenet_v1_025_batch_32'],
-            # ['mobilenet_v1_025_batch_48'],
             # ['mobilenet_v1_025_batch_48', 'mobilenet_v1_025_batch_48'],
             # ['mobilenet_v1_025_batch_48', 'ptb_word_lm'],
-            # ['resnet_v1_50_batch_16'],
             # ['resnet_v1_50_batch_16', 'resnet_v1_50_batch_16'],
             # ['resnet_v1_50_batch_16', 'ptb_word_lm']
 
