@@ -193,7 +193,7 @@ def create_process(model_name, index, experiment_path, percent=0.0, is_nvprof=Fa
         data_path_simple = os.path.join(data_path_simple, 'data')
         data_path = ['--data_path', data_path_simple]
         cmd += data_path
-        timestep = ['--max_number_of_steps', 2000]
+        timestep = ['--max_number_of_steps', '2000']
     else:
         if is_nvprof:
             timestep_num = '20'
@@ -377,10 +377,10 @@ def main():
     # which one we should run in parallel
     sets = [
             #['debug'] 
-            ['resnet_v1_50_batch_8'],
-            ['resnet_v1_50_batch_16'],
-            ['mobilenet_v1_025_batch_32'],
-            ['mobilenet_v1_025_batch_48'],
+            # ['resnet_v1_50_batch_8'],
+            # ['resnet_v1_50_batch_16'],
+            # ['mobilenet_v1_025_batch_32'],
+            # ['mobilenet_v1_025_batch_48'],
             ['ptb_word_lm'],
             # ['resnet_v1_50_batch_8', 'resnet_v1_50_batch_8']
             # ['resnet_v1_50_batch_8', 'mobilenet_v1_025_batch_32'],
