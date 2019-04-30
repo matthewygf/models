@@ -124,7 +124,8 @@ ptb_word_lm_cmd = ['python3', 'tutorials/rnn/ptb/ptb_word_lm.py',
 debug_cmd = ['python3', 'test_nv.py']
 
 nvprof_prefix_cmd = ['nvprof', '--profile-from-start', 'off', 
-                     '--timeout', '10', '--csv' ,
+                     '--timeout', '25', 
+                     '--csv',
                      '--metrics', 'achieved_occupancy,dram_utilization,ipc,l2_utilization,pcie_total_data_received,pcie_total_data_transmitted,sm_efficiency,stall_constant_memory_dependency,warp_execution_efficiency'
                      ]
 
@@ -275,11 +276,11 @@ def run(
         # then we proceed as normal
         nvp, out, err, path, out_dir = create_process(experiment_set[0], 1, experiment_path, 0.92, True)
         while nvp.poll() is None:
+            print("nvprof profiling")
             time.sleep(2)
         out.close()
         err.close()
         
-
     for experiment_run in range(_START, _START+_RUNS_PER_SET):
         if os.path.exists(average_log):
             average_file = open(average_log, mode='a+')
