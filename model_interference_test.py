@@ -124,7 +124,7 @@ ptb_word_lm_cmd = ['python3', 'tutorials/rnn/ptb/ptb_word_lm.py',
 debug_cmd = ['python3', 'test_nv.py']
 
 nvprof_prefix_cmd = ['nvprof', '--profile-from-start', 'off', 
-                     '--timeout', '360',
+                     '--timeout', '540',
                      '--csv',
                      '--metrics', 'achieved_occupancy,dram_utilization,ipc,l2_utilization,sm_efficiency'
                      ]
@@ -204,9 +204,9 @@ def create_process(model_name, index, experiment_path, percent=0.0, is_nvprof=Fa
         if is_nvprof:
             timestep_num = '20'
         else:
-            timestep_num = '150' 
+            timestep_num = '500' 
             if 'mobile' in model_name:
-                timestep_num = '250'
+                timestep_num = '500'
         timestep = ['--max_number_of_steps', timestep_num]
 
     cmd += timestep
@@ -305,7 +305,7 @@ def run(
         sys_tracker = sys_track.SystemInfoTracker(experiment_path)
 
         try:
-            smi_file_path = os.path.join(experiment_path, 'smi.log') 
+            smi_file_path = os.path.join(experiment_path, 'smi_out.log') 
             smi_file = open(smi_file_path, 'a+')
             nvidia_smi_cmd = ['watch', '-n', '0.2', 'nvidia-smi', '--query-gpu=memory.used,memory.total,utilization.gpu,utilization.memory,power.draw', '--format=noheader,csv', '|', 'tee', '-a' , experiment_path+'/smi_watch.log']
             smi_p = subprocess.Popen(nvidia_smi_cmd, stdout=smi_file, stderr=smi_file)
