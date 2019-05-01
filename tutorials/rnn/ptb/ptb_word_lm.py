@@ -573,7 +573,7 @@ def main(_):
         i += 1
         print("ran epoch %d" % i)
 
-      _cudart.cudaProfileStop()
+      _cudart.cudaProfilerStop()
       tf.compat.v1.logging.info("Finished , executed for: %d", time.time() - start_time)
       # test_perplexity = run_epoch(session, mtest)
       # print("Test Perplexity: %.3f" % test_perplexity)
