@@ -249,7 +249,7 @@ def kill_process_safe(pid,
     err_file_paths.pop(i)
     return mean, num
     
-_RUNS_PER_SET = 1
+_RUNS_PER_SET = 2
 _START = 1
 
 def run(
@@ -373,10 +373,12 @@ def run(
                 smi_file.close()
 
         prof_poll = prof_timeline.poll()
-        if experiment_run == 1 and prof_poll is None:
-            prof_timeline.kill()
-            timeline_file.close()
-
+        while prof_poll is None:
+            time.sleep(1)
+            print("waiting for nvprof to finish.")
+            prof_poll = prof_timeline.poll()
+        print("nvprof finished")
+        timeline_file.close()
         average_file.close()
         sys_tracker.stop()
 
