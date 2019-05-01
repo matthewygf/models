@@ -308,8 +308,8 @@ def run(
             timeline_file_path = os.path.join(experiment_path, 'timeline_err.log')
             timeline_file = open(timeline_file_path, 'a+')
             timeline_prof_file = os.path.join(experiment_path, '%p_timeline')
-            nvprof_all_cmd = ['nvprof', '--profile-all-processes', '--timeout', str(50), '-o', timeline_prof_file]
-
+            nvprof_all_cmd = ['nvprof', '--profile-all-processes', '--timeout', str(30), '-o', timeline_prof_file ]
+            
             prof_timeline = subprocess.Popen(nvprof_all_cmd, stdout=timeline_file, stderr=timeline_file)
             prof_poll = None
 
@@ -375,7 +375,7 @@ def run(
 
         prof_poll = prof_timeline.poll()
         while prof_poll is None:
-            time.sleep(10)
+            time.sleep(5)
             print("waiting for nvprof to finish.")
             prof_poll = prof_timeline.poll()
             prof_timeline.kill()
