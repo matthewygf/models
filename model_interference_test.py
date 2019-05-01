@@ -393,21 +393,21 @@ def main():
     # which one we should run in parallel
     sets = [
             #['debug'] 
-            ['resnet_v1_50_batch_8'],
-            ['resnet_v1_50_batch_16'],
-            ['mobilenet_v1_025_batch_32'],
-            ['mobilenet_v1_025_batch_48'],
+            # ['resnet_v1_50_batch_8'],
+            # ['resnet_v1_50_batch_16'],
+            # ['mobilenet_v1_025_batch_32'],
+            # ['mobilenet_v1_025_batch_48'],
             ['ptb_word_lm'],
             ['resnet_v1_50_batch_8', 'resnet_v1_50_batch_8'],
-            ['resnet_v1_50_batch_8', 'mobilenet_v1_025_batch_32'],
-            ['resnet_v1_50_batch_8', 'ptb_word_lm'],
-            ['mobilenet_v1_025_batch_32', 'mobilenet_v1_025_batch_32'],
-            ['ptb_word_lm', 'ptb_word_lm'],
-            ['ptb_word_lm', 'mobilenet_v1_025_batch_32'],
-            ['mobilenet_v1_025_batch_48', 'mobilenet_v1_025_batch_48'],
-            ['mobilenet_v1_025_batch_48', 'ptb_word_lm'],
-            ['resnet_v1_50_batch_16', 'resnet_v1_50_batch_16'],
-            ['resnet_v1_50_batch_16', 'ptb_word_lm']
+            # ['resnet_v1_50_batch_8', 'mobilenet_v1_025_batch_32'],
+            # ['resnet_v1_50_batch_8', 'ptb_word_lm'],
+            # ['mobilenet_v1_025_batch_32', 'mobilenet_v1_025_batch_32'],
+            # ['ptb_word_lm', 'ptb_word_lm'],
+            # ['ptb_word_lm', 'mobilenet_v1_025_batch_32'],
+            # ['mobilenet_v1_025_batch_48', 'mobilenet_v1_025_batch_48'],
+            # ['mobilenet_v1_025_batch_48', 'ptb_word_lm'],
+            # ['resnet_v1_50_batch_16', 'resnet_v1_50_batch_16'],
+            # ['resnet_v1_50_batch_16', 'ptb_word_lm']
 
             # ['ptb_word_lm', 'mobilenet_v1_025_batch_32', 'mobilenet_v1_025_batch_32'],
             # ['ptb_word_lm', 'ptb_word_lm', 'ptb_word_lm', 'ptb_word_lm'], 
