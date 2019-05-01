@@ -435,7 +435,8 @@ def run_epoch(session, model, eval_op=None, verbose=False, global_step=None, is_
     for i, (c, h) in enumerate(model.initial_state):
       feed_dict[c] = state[i].c
       feed_dict[h] = state[i].h
-      
+    if session.should_stop():
+      return 0
     vals = session.run(fetches, feed_dict)
     time_elapsed = time.time() - step_start_time
     if is_training:
