@@ -6,7 +6,6 @@ import subprocess
 import datetime
 import time
 import logging
-import psutil
 import process_tracker as p_track
 import system_tracker as sys_track
 import numpy as np
@@ -309,7 +308,7 @@ def run(
             timeline_file_path = os.path.join(experiment_path, 'timeline_err.log')
             timeline_file = open(timeline_file_path, 'a+')
             timeline_prof_file = os.path.join(experiment_path, '%p_timeline')
-            nvprof_all_cmd = ['nvprof', '--profile-all-processes', '-o', timeline_prof_file]
+            nvprof_all_cmd = ['nvprof', '--profile-all-processes', '--timeout', str(50), '-o', timeline_prof_file]
 
             prof_timeline = subprocess.Popen(nvprof_all_cmd, stdout=timeline_file, stderr=timeline_file)
             prof_poll = None
@@ -330,6 +329,8 @@ def run(
                     poll = None
                     pid = p.pid
                     poll = p.poll()
+                    current_time = time.time()
+                    executed = current_time - start_time
                     if poll is None:
                         print('Process %d still running' % pid)
                     else:
@@ -338,8 +339,7 @@ def run(
                         line = ("experiment set %d, experiment_run %d: %d process average num p step is %.4f and total number of step is: %d \n" % 
                                 (experiment_index, experiment_run, pid, mean, num))
                         average_file.write(line)
-                    current_time = time.time()
-                    executed = current_time - start_time
+                    
                     print("checking the time, process %d been running for %d " % (pid,executed))
                     if executed >= 60.0 * 5 and poll is not None:
                         # make sure we profile a few mins.

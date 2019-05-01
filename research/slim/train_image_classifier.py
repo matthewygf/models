@@ -613,7 +613,7 @@ def main(_):
       status = _cudart.cudaProfilerStart()
       if status != 0:
         raise EnvironmentError()
-
+      start_time = time.time()
       slim.learning.train(
           train_tensor,
           logdir=FLAGS.train_dir,
@@ -633,6 +633,7 @@ def main(_):
         # if cuda profile start was successful
         # then we stop
         _cudart.cudaProfilerStop()
+      tf.compat.v1.logging.info("Finished , executed for: %d", time.time() - start_time)
 
   
   time.sleep(5)

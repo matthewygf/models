@@ -554,7 +554,7 @@ def main(_):
     status = _cudart.cudaProfilerStart()
     if status != 0:
       raise EnvironmentError()
-
+    start_time = time.time()
     with tf.compat.v1.train.MonitoredTrainingSession(
             checkpoint_dir=FLAGS.save_path,
             config=config_proto,
@@ -574,7 +574,7 @@ def main(_):
         print("ran epoch %d" % i)
 
       _cudart.cudaProfileStop()
-      tf.compat.v1.logging.info("Finish")
+      tf.compat.v1.logging.info("Finished , executed for: %d", time.time() - start_time)
       # test_perplexity = run_epoch(session, mtest)
       # print("Test Perplexity: %.3f" % test_perplexity)
     
