@@ -308,7 +308,7 @@ def run(
             # nvprof timeline here
             timeline_file_path = os.path.join(experiment_path, 'timeline_err.log')
             timeline_file = open(timeline_file_path, 'a+')
-            nvprof_all_cmd = ['nvprof', '--profile-all-processes', '--print-gpu-trace', '--csv']
+            nvprof_all_cmd = ['nvprof', '--profile-all-processes', '-o', '%p_timeline']
 
             prof_timeline = subprocess.Popen(nvprof_all_cmd, stdout=timeline_file, stderr=timeline_file)
             prof_poll = None
