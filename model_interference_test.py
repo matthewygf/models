@@ -308,7 +308,8 @@ def run(
             # nvprof timeline here
             timeline_file_path = os.path.join(experiment_path, 'timeline_err.log')
             timeline_file = open(timeline_file_path, 'a+')
-            nvprof_all_cmd = ['nvprof', '--profile-all-processes', '-o', '%p_timeline']
+            timeline_prof_file = os.path.join(experiment_path, '%p_timeline')
+            nvprof_all_cmd = ['nvprof', '--profile-all-processes', '-o', timeline_prof_file]
 
             prof_timeline = subprocess.Popen(nvprof_all_cmd, stdout=timeline_file, stderr=timeline_file)
             prof_poll = None
@@ -374,9 +375,10 @@ def run(
 
         prof_poll = prof_timeline.poll()
         while prof_poll is None:
-            time.sleep(1)
+            time.sleep(10)
             print("waiting for nvprof to finish.")
             prof_poll = prof_timeline.poll()
+            prof_timeline.kill()
         print("nvprof finished")
         timeline_file.close()
         average_file.close()
