@@ -432,24 +432,24 @@ def run_epoch(session, model, eval_op=None, verbose=False, global_step=None, is_
     for i, (c, h) in enumerate(model.initial_state):
       feed_dict[c] = state[i].c
       feed_dict[h] = state[i].h
+    if not session.should_stop():
+      vals = session.run(fetches, feed_dict)
+      time_elapsed = time.time() - step_start_time
+      if is_training:
+        tf.compat.v1.logging.info('global step %d, (%.3f sec/step)', vals["global_step"], time_elapsed)
+      cost = vals["cost"]
+      state = vals["final_state"]
 
-    vals = session.run(fetches, feed_dict)
-    time_elapsed = time.time() - step_start_time
-    if is_training:
-      tf.compat.v1.logging.info('global step %d, (%.3f sec/step)', vals["global_step"], time_elapsed)
-    cost = vals["cost"]
-    state = vals["final_state"]
+      costs += cost
+      iters += model.input.num_steps
 
-    costs += cost
-    iters += model.input.num_steps
+      if verbose and step % (model.input.epoch_size // 10) == 10:
+        print("%.3f perplexity: %.3f speed: %.0f wps" %
+              (step * 1.0 / model.input.epoch_size, np.exp(costs / iters),
+              iters * model.input.batch_size * max(1, FLAGS.num_gpus) /
+              (time.time() - start_time)))
 
-    if verbose and step % (model.input.epoch_size // 10) == 10:
-      print("%.3f perplexity: %.3f speed: %.0f wps" %
-            (step * 1.0 / model.input.epoch_size, np.exp(costs / iters),
-             iters * model.input.batch_size * max(1, FLAGS.num_gpus) /
-             (time.time() - start_time)))
-
-  return np.exp(costs / iters)
+  return np.exp(costs / iters+0.00000001)
 
 
 def get_config():
