@@ -39,6 +39,7 @@ from official.transformer.v2 import transformer
 from official.transformer.v2 import translate
 from official.utils.flags import core as flags_core
 from official.utils.logs import logger
+from official.utils.misc import keras_utils
 from official.utils.misc import distribution_utils
 
 
@@ -97,6 +98,13 @@ class TransformerTask(object):
         distribution_strategy=flags_obj.distribution_strategy,
         num_gpus=flags_core.get_num_gpus(flags_obj))
 
+    print("Running transformer with num_gpus =", num_gpus)
+    if self.distribution_strategy:
+      print("For training, using distribution strategy: ",
+            self.distribution_strategy)
+    else:
+      print("Not using any distribution strategy.")
+
     self.params = params = misc.get_model_params(flags_obj.param_set, num_gpus)
 
     params["num_gpus"] = num_gpus
@@ -110,10 +118,26 @@ class TransformerTask(object):
     params["use_synthetic_data"] = flags_obj.use_synthetic_data
     params["batch_size"] = flags_obj.batch_size or params["default_batch_size"]
     params["repeat_dataset"] = None
+    params["dtype"] = flags_core.get_tf_dtype(flags_obj)
+
+    if params["dtype"] == tf.float16:
+      # TODO(reedwm): It's pretty ugly to set the global policy in a constructor
+      # like this. What if multiple instances of TransformerTask are created?
+      # We should have a better way in the tf.keras.mixed_precision API of doing
+      # this.
+      policy = tf.keras.mixed_precision.experimental.Policy(
+          'infer_float32_vars')
+      tf.keras.mixed_precision.experimental.set_policy(policy)
 
   def train(self):
     """Trains the model."""
     params, flags_obj, is_train = self.params, self.flags_obj, True
+    # Sets config options.
+    keras_utils.set_session_config(
+        enable_xla=flags_obj.enable_xla,
+        enable_grappler_layout_optimizer=
+        flags_obj.enable_grappler_layout_optimizer)
+
     _ensure_dir(flags_obj.model_dir)
     if self.distribution_strategy:
       with self.distribution_strategy.scope():
@@ -190,7 +214,8 @@ class TransformerTask(object):
 
     with tf.name_scope("model"):
       model = transformer.create_model(params, is_train)
-      self._load_weights_if_possible(model, flags_obj.init_weight_path)
+      self._load_weights_if_possible(
+          model, tf.train.latest_checkpoint(self.flags_obj.model_dir))
       model.summary()
     subtokenizer = tokenizer.Subtokenizer(flags_obj.vocab_file)
 
@@ -231,6 +256,10 @@ class TransformerTask(object):
         params["optimizer_adam_beta1"],
         params["optimizer_adam_beta2"],
         epsilon=params["optimizer_adam_epsilon"])
+    if params["dtype"] == tf.float16:
+      opt = tf.keras.mixed_precision.experimental.LossScaleOptimizer(
+          opt, loss_scale=flags_core.get_loss_scale(self.flags_obj,
+                                                    default_for_fp16="dynamic"))
     return opt
 
 
