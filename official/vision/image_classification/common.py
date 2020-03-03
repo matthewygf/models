@@ -282,6 +282,10 @@ def define_keras_flags(
       'It only changes imagenet resnet model layers for now. This flag is '
       'a temporal flag during transition to tf.keras.layers. Do not use this '
       'flag for external usage. this will be removed shortly.')
+  flags.DEFINE_boolean(
+      name='keras_application_models', default=False,
+      help='Whether the model is a keras_applicaiton_models. Purly Experimental.'
+  )
 
   if model:
     flags.DEFINE_string('model', 'resnet50_v1.5',

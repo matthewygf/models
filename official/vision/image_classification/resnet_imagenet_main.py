@@ -38,6 +38,16 @@ from official.vision.image_classification import common
 from official.vision.image_classification import imagenet_preprocessing
 from official.vision.image_classification import resnet_model
 
+keras_app_models = {
+  'inceptionv3': tf.keras.applications.InceptionV3,
+  'nasnetmobile': tf.keras.applications.NASNetMobile,
+  'mobilenetv2': tf.keras.applications.MobileNetV2,
+  'densenet121': tf.keras.applications.DenseNet121,
+  'densenet169': tf.keras.applications.DenseNet169,
+  'densenet201': tf.keras.applications.DenseNet201,
+  'vgg16': tf.keras.applications.VGG16,
+  'vgg19': tf.keras.applications.VGG19,
+}
 
 def run(flags_obj):
   """Run ResNet ImageNet training and eval loop using native Keras APIs.
@@ -103,7 +113,7 @@ def run(flags_obj):
   # This use_keras_image_data_format flags indicates whether image preprocessor
   # output format should be same as the keras backend image data format or just
   # channel-last format.
-  use_keras_image_data_format = (flags_obj.model == 'mobilenet')
+  use_keras_image_data_format = flags_obj.keras_application_models
 
   # pylint: disable=protected-access
   if flags_obj.use_synthetic_data:
@@ -197,6 +207,13 @@ def run(flags_obj):
           weights=None,
           classes=imagenet_preprocessing.NUM_CLASSES,
           layers=tf.keras.layers)
+    elif flags_obj.keras_application_models:
+      model_kfn = keras_app_models.get(flags_obj.model, None)
+      if model_kfn is None:
+        raise ValueError("No keras application model name %s" % flags_obj.model)
+      model = model_kfn(
+        weights=None,
+        classes=imagenet_preprocessing.NUM_CLASSES)
     if flags_obj.pretrained_filepath:
       model.load_weights(flags_obj.pretrained_filepath)
 
