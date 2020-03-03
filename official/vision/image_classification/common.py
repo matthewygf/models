@@ -351,7 +351,7 @@ def define_pruning_flags():
 
 def get_synth_input_fn(height, width, num_channels, num_classes,
                        dtype=tf.float32, 
-                       use_keras_image_data_format=use_keras_image_data_format,
+                       use_keras_image_data_format=False,
                        drop_remainder=True):
   """Returns an input function that returns a dataset with random data.
 
