@@ -97,6 +97,14 @@ def run(flags_obj):
 
   strategy_scope = distribution_utils.get_strategy_scope(strategy)
 
+  # Current resnet_model.resnet50 input format is always channel-last.
+  # We use keras_application mobilenet model which input format is depends on
+  # the keras beckend image data format.
+  # This use_keras_image_data_format flags indicates whether image preprocessor
+  # output format should be same as the keras backend image data format or just
+  # channel-last format.
+  use_keras_image_data_format = (flags_obj.model == 'mobilenet')
+
   # pylint: disable=protected-access
   if flags_obj.use_synthetic_data:
     distribution_utils.set_up_synthetic_data()
@@ -105,6 +113,7 @@ def run(flags_obj):
         width=imagenet_preprocessing.DEFAULT_IMAGE_SIZE,
         num_channels=imagenet_preprocessing.NUM_CHANNELS,
         num_classes=imagenet_preprocessing.NUM_CLASSES,
+        use_keras_image_data_format=use_keras_image_data_format,
         dtype=dtype,
         drop_remainder=True)
   else:
@@ -115,13 +124,6 @@ def run(flags_obj):
   # in the dataset, as XLA-GPU doesn't support dynamic shapes.
   drop_remainder = flags_obj.enable_xla
 
-  # Current resnet_model.resnet50 input format is always channel-last.
-  # We use keras_application mobilenet model which input format is depends on
-  # the keras beckend image data format.
-  # This use_keras_image_data_format flags indicates whether image preprocessor
-  # output format should be same as the keras backend image data format or just
-  # channel-last format.
-  use_keras_image_data_format = (flags_obj.model == 'mobilenet')
   train_input_dataset = input_fn(
       is_training=True,
       data_dir=flags_obj.data_dir,

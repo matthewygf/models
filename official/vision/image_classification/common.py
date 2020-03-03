@@ -350,7 +350,9 @@ def define_pruning_flags():
 
 
 def get_synth_input_fn(height, width, num_channels, num_classes,
-                       dtype=tf.float32, drop_remainder=True):
+                       dtype=tf.float32, 
+                       use_keras_image_data_format=use_keras_image_data_format,
+                       drop_remainder=True):
   """Returns an input function that returns a dataset with random data.
 
   This input_fn returns a data set that iterates over a set of random data and
@@ -380,6 +382,11 @@ def get_synth_input_fn(height, width, num_channels, num_classes,
                                     num_channels=num_channels,
                                     num_classes=num_classes,
                                     dtype=dtype)
+                                    
+    if use_keras_image_data_format:
+      if tf.keras.backend.image_data_format() == 'channels_first':
+        inputs = tf.transpose(inputs, perm=[2, 0, 1])
+
     # Cast to float32 for Keras model.
     labels = tf.cast(labels, dtype=tf.float32)
     data = tf.data.Dataset.from_tensors((inputs, labels)).repeat()
