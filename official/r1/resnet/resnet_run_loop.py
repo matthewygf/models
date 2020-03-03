@@ -145,7 +145,7 @@ def get_synth_input_fn(height, width, num_channels, num_classes,
     that can be used for iteration.
   """
   # pylint: disable=unused-argument
-  def input_fn(is_training, data_dir, batch_size, *args, **kwargs):
+  def input_fn(is_training, data_dir, batch_size, use_keras_image_data_format, *args, **kwargs):
     """Returns dataset filled with random data."""
     # Synthetic input should be within [0, 255].
     inputs = tf.random.truncated_normal(
