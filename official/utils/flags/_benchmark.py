@@ -23,6 +23,14 @@ from absl import flags
 from official.utils.flags._conventions import help_wrap
 
 
+def define_log_steps():
+  flags.DEFINE_integer(
+      name="log_steps", default=100,
+      help="Frequency with which to log timing information with TimeHistory.")
+
+  return []
+
+
 def define_benchmark(benchmark_log_dir=True, bigquery_uploader=True):
   """Register benchmarking flags.
 
@@ -51,6 +59,8 @@ def define_benchmark(benchmark_log_dir=True, bigquery_uploader=True):
                      "between different test runs. This flag is designed for "
                      "human consumption, and does not have any impact within "
                      "the system."))
+
+  define_log_steps()
 
   if benchmark_log_dir:
     flags.DEFINE_string(

@@ -1,3 +1,4 @@
+# Lint as: python2, python3
 # Copyright 2018 The TensorFlow Authors All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,6 +18,7 @@
 import os
 import tensorflow as tf
 
+from tensorflow.contrib import quantize as contrib_quantize
 from tensorflow.python.tools import freeze_graph
 from deeplab import common
 from deeplab import input_preprocess
@@ -53,15 +55,23 @@ flags.DEFINE_multi_float('inference_scales', [1.0],
 flags.DEFINE_bool('add_flipped_images', False,
                   'Add flipped images during inference or not.')
 
+flags.DEFINE_integer(
+    'quantize_delay_step', -1,
+    'Steps to start quantized training. If < 0, will not quantize model.')
+
 flags.DEFINE_bool('save_inference_graph', False,
                   'Save inference graph in text proto.')
 
 # Input name of the exported model.
 _INPUT_NAME = 'ImageTensor'
 
-# Output name of the exported model.
+# Output name of the exported predictions.
 _OUTPUT_NAME = 'SemanticPredictions'
 _RAW_OUTPUT_NAME = 'RawSemanticPredictions'
+
+# Output name of the exported probabilities.
+_OUTPUT_PROB_NAME = 'SemanticProbabilities'
+_RAW_OUTPUT_PROB_NAME = 'RawSemanticProbabilities'
 
 
 def _create_input_tensors():
@@ -124,6 +134,9 @@ def main(unused_argv):
           image_pyramid=FLAGS.image_pyramid)
     else:
       tf.logging.info('Exported model performs multi-scale inference.')
+      if FLAGS.quantize_delay_step >= 0:
+        raise ValueError(
+            'Quantize mode is not supported with multi-scale test.')
       predictions = model.predict_labels_multi_scale(
           image,
           model_options=model_options,
@@ -132,11 +145,16 @@ def main(unused_argv):
     raw_predictions = tf.identity(
         tf.cast(predictions[common.OUTPUT_TYPE], tf.float32),
         _RAW_OUTPUT_NAME)
+    raw_probabilities = tf.identity(
+        predictions[common.OUTPUT_TYPE + model.PROB_SUFFIX],
+        _RAW_OUTPUT_PROB_NAME)
+
     # Crop the valid regions from the predictions.
-    semantic_predictions = tf.slice(
-        raw_predictions,
-        [0, 0, 0],
-        [1, resized_image_size[0], resized_image_size[1]])
+    semantic_predictions = raw_predictions[
+        :, :resized_image_size[0], :resized_image_size[1]]
+    semantic_probabilities = raw_probabilities[
+        :, :resized_image_size[0], :resized_image_size[1]]
+
     # Resize back the prediction to the original image size.
     def _resize_label(label, label_size):
       # Expand dimension of label to [1, height, width, 1] for resize operation.
@@ -150,7 +168,14 @@ def main(unused_argv):
     semantic_predictions = _resize_label(semantic_predictions, image_size)
     semantic_predictions = tf.identity(semantic_predictions, name=_OUTPUT_NAME)
 
-    saver = tf.train.Saver(tf.model_variables())
+    semantic_probabilities = tf.image.resize_bilinear(
+        semantic_probabilities, image_size, align_corners=True,
+        name=_OUTPUT_PROB_NAME)
+
+    if FLAGS.quantize_delay_step >= 0:
+      contrib_quantize.create_eval_graph()
+
+    saver = tf.train.Saver(tf.all_variables())
 
     dirname = os.path.dirname(FLAGS.export_path)
     tf.gfile.MakeDirs(dirname)
@@ -159,7 +184,7 @@ def main(unused_argv):
         graph_def,
         saver.as_saver_def(),
         FLAGS.checkpoint_path,
-        _OUTPUT_NAME,
+        _OUTPUT_NAME + ',' + _OUTPUT_PROB_NAME,
         restore_op_name=None,
         filename_tensor_name=None,
         output_graph=FLAGS.export_path,

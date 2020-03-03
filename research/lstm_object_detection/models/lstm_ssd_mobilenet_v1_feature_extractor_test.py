@@ -17,11 +17,13 @@
 
 import numpy as np
 import tensorflow as tf
+from tensorflow.contrib import slim as contrib_slim
+from tensorflow.contrib import training as contrib_training
 
 from lstm_object_detection.models import lstm_ssd_mobilenet_v1_feature_extractor as feature_extactor
 from object_detection.models import ssd_feature_extractor_test
 
-slim = tf.contrib.slim
+slim = contrib_slim
 
 
 class LstmSsdMobilenetV1FeatureExtractorTest(
@@ -42,11 +44,11 @@ class LstmSsdMobilenetV1FeatureExtractorTest(
       use_explicit_padding: A boolean whether to use explicit padding.
 
     Returns:
-      An lstm_ssd_meta_arch.LSTMMobileNetV1FeatureExtractor object.
+      An lstm_ssd_meta_arch.LSTMSSDMobileNetV1FeatureExtractor object.
     """
     min_depth = 32
     extractor = (
-        feature_extactor.LSTMMobileNetV1FeatureExtractor(
+        feature_extactor.LSTMSSDMobileNetV1FeatureExtractor(
             is_training,
             depth_multiplier,
             min_depth,
@@ -111,7 +113,7 @@ class LstmSsdMobilenetV1FeatureExtractorTest(
         'lstm_state_step': tf.zeros([1])
     }
     seq = {'test': tf.random_uniform([3, 1, 1, 1])}
-    stateful_reader = tf.contrib.training.SequenceQueueingStateSaver(
+    stateful_reader = contrib_training.SequenceQueueingStateSaver(
         batch_size=1,
         num_unroll=1,
         input_length=2,
