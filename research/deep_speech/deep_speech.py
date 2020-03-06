@@ -231,6 +231,7 @@ def run_deep_speech(_):
       model_fn=model_fn,
       model_dir=flags_obj.model_dir,
       config=run_config,
+      max_steps=flags_obj.max_train_steps,
       params={
           "num_classes": num_classes,
       }
@@ -280,6 +281,9 @@ def run_deep_speech(_):
         flags_obj.batch_size)
 
     estimator.train(input_fn=input_fn_train, hooks=train_hooks)
+    
+    if flags_obj.skip_eval:
+      break
 
     # Evaluation
     tf.logging.info("Starting to evaluate...")
@@ -316,7 +320,7 @@ def define_deep_speech_flags():
       inter_op=False,
       intra_op=False,
       synthetic_data=False,
-      max_train_steps=False,
+      max_train_steps=True,
       dtype=False
   )
   flags_core.define_benchmark()
@@ -393,6 +397,10 @@ def define_deep_speech_flags():
   flags.DEFINE_float(
       name="learning_rate", default=5e-4,
       help=flags_core.help_wrap("The initial learning rate."))
+  
+  flags.DEFINE_bool(
+      name="skip_eval", default=False,
+      help=help=flags_core.help_wrap("Whether to skip eval"))
 
   # Evaluation metrics threshold
   flags.DEFINE_float(
