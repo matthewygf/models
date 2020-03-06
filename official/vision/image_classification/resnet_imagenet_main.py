@@ -37,6 +37,7 @@ from official.utils.misc import model_helpers
 from official.vision.image_classification import common
 from official.vision.image_classification import imagenet_preprocessing
 from official.vision.image_classification import resnet_model
+import ctypes
 
 keras_app_models = {
   'inceptionv3': tf.keras.applications.InceptionV3,
@@ -62,6 +63,11 @@ def run(flags_obj):
   Returns:
     Dictionary of training and eval stats.
   """
+  try:
+    _cudart = ctypes.CDLL('libcudart.so')
+  except:
+    _cudart = None  
+
   keras_utils.set_session_config(
       enable_eager=flags_obj.enable_eager,
       enable_xla=flags_obj.enable_xla)
@@ -275,7 +281,11 @@ def run(flags_obj):
     # when not using distribition strategy.
     no_dist_strat_device = tf.device('/device:GPU:0')
     no_dist_strat_device.__enter__()
-
+  
+  if _cudart:
+    cuda_status = _cudart.cudaProfilerStart()
+  else:
+    cuda_status = None
   history = model.fit(train_input_dataset,
                       epochs=train_epochs,
                       steps_per_epoch=steps_per_epoch,
@@ -284,7 +294,8 @@ def run(flags_obj):
                       validation_data=validation_data,
                       validation_freq=flags_obj.epochs_between_evals,
                       verbose=2)
-
+  if cuda_status == 0:
+    _cudart.cudaProfilerStop()
   eval_output = None
   if not flags_obj.skip_eval:
     eval_output = model.evaluate(eval_input_dataset,
