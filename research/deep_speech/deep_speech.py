@@ -231,7 +231,6 @@ def run_deep_speech(_):
       model_fn=model_fn,
       model_dir=flags_obj.model_dir,
       config=run_config,
-      max_steps=flags_obj.max_train_steps,
       params={
           "num_classes": num_classes,
       }
@@ -280,7 +279,7 @@ def run_deep_speech(_):
         train_speech_dataset.entries, cycle_index, flags_obj.sortagrad,
         flags_obj.batch_size)
 
-    estimator.train(input_fn=input_fn_train, hooks=train_hooks)
+    estimator.train(input_fn=input_fn_train, hooks=train_hooks, max_steps=flags_obj.max_train_steps)
     
     if flags_obj.skip_eval:
       break
@@ -400,7 +399,7 @@ def define_deep_speech_flags():
   
   flags.DEFINE_bool(
       name="skip_eval", default=False,
-      help=help=flags_core.help_wrap("Whether to skip eval"))
+      help=flags_core.help_wrap("Whether to skip eval"))
 
   # Evaluation metrics threshold
   flags.DEFINE_float(
