@@ -196,7 +196,8 @@ def define_keras_flags(
     dynamic_loss_scale=True,
     model=False,
     optimizer=False,
-    pretrained_filepath=False):
+    pretrained_filepath=False,
+    dataset=False):
   """Define flags for Keras models."""
   flags_core.define_base(clean=True, num_gpu=True, run_eagerly=True,
                          train_epochs=True, epochs_between_evals=True,
@@ -304,6 +305,9 @@ def define_keras_flags(
   if pretrained_filepath:
     flags.DEFINE_string('pretrained_filepath', '',
                         'Pretrained file path.')
+  if dataset:
+    flags.DEFINE_string('dataset', 'imagenet',
+                        'Dataset to use.')
 
 
 def get_synth_data(height, width, num_channels, num_classes, dtype):

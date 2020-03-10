@@ -21,6 +21,7 @@ from __future__ import print_function
 import os
 from absl import logging
 import tensorflow as tf
+import tensorflow_datasets as tfds
 
 from official.vision.image_classification import imagenet_preprocessing
 
@@ -39,6 +40,31 @@ NUM_IMAGES = {
 _NUM_DATA_FILES = 5
 NUM_CLASSES = 10
 
+
+def get_parse_record_fn(use_keras_image_data_format=False):
+  """Get a function for parsing the records, accounting for image format.
+
+  This is useful by handling different types of Keras models. For instance,
+  the current resnet_model.resnet50 input format is always channel-last,
+  whereas the keras_applications mobilenet input format depends on
+  tf.keras.backend.image_data_format(). We should set
+  use_keras_image_data_format=False for the former and True for the latter.
+
+  Args:
+    use_keras_image_data_format: A boolean denoting whether data format is keras
+      backend image data format. If False, the image format is channel-last. If
+      True, the image format matches tf.keras.backend.image_data_format().
+
+  Returns:
+    Function to use for parsing the records.
+  """
+  def parse_record_fn(raw_record, is_training, dtype):
+    image, label = parse_record(raw_record, is_training, dtype)
+    if use_keras_image_data_format:
+      if tf.keras.backend.image_data_format() == 'channels_first':
+        image = tf.transpose(image, perm=[2, 0, 1])
+    return image, label
+  return parse_record_fn
 
 def parse_record(raw_record, is_training, dtype):
   """Parses a record containing a training example of an image.
@@ -137,18 +163,17 @@ def input_fn(is_training,
   Returns:
     A dataset that can be used for iteration.
   """
-  filenames = get_filenames(is_training, data_dir)
-  dataset = tf.data.FixedLengthRecordDataset(filenames, _RECORD_BYTES)
+  cifar_builder = tfds.builder('cifar10', data_dir=data_dir)
+  if len(os.listdir(data_dir)) == 0:
+    cifar_builder.download_and_prepare()
 
-  if input_context:
-    logging.info(
-        'Sharding the dataset: input_pipeline_id=%d num_input_pipelines=%d',
-        input_context.input_pipeline_id, input_context.num_input_pipelines)
-    dataset = dataset.shard(input_context.num_input_pipelines,
-                            input_context.input_pipeline_id)
+  if is_training:
+    ds = cifar_builder.as_dataset(split='train')
+  else:
+    ds = cifar_builder.as_dataset(split='test')
 
   return imagenet_preprocessing.process_record_dataset(
-      dataset=dataset,
+      dataset=ds,
       is_training=is_training,
       batch_size=batch_size,
       shuffle_buffer=NUM_IMAGES['train'],

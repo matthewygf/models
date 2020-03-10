@@ -35,7 +35,7 @@ from official.utils.misc import distribution_utils
 from official.utils.misc import keras_utils
 from official.utils.misc import model_helpers
 from official.vision.image_classification import common
-from official.vision.image_classification import imagenet_preprocessing
+from official.vision.image_classification import imagenet_preprocessing, cifar_preprocessing
 from official.vision.image_classification import resnet_model
 import ctypes
 
@@ -121,20 +121,24 @@ def run(flags_obj):
   # channel-last format.
   use_keras_image_data_format = flags_obj.keras_application_models
 
+  preproccessing_type = imagenet_preprocessing if flags_obj.dataset == "imagenet" else cifar_preprocessing
+
   # pylint: disable=protected-access
   if flags_obj.use_synthetic_data:
+    assert flags_obj.dataset == "imagenet", \
+       f"Expect to only work with ImageNet, but have {flags_obj.dataset}"
     distribution_utils.set_up_synthetic_data()
     input_fn = common.get_synth_input_fn(
-        height=imagenet_preprocessing.DEFAULT_IMAGE_SIZE,
-        width=imagenet_preprocessing.DEFAULT_IMAGE_SIZE,
-        num_channels=imagenet_preprocessing.NUM_CHANNELS,
-        num_classes=imagenet_preprocessing.NUM_CLASSES,
+        height=preproccessing_type.DEFAULT_IMAGE_SIZE,
+        width=preproccessing_type.DEFAULT_IMAGE_SIZE,
+        num_channels=preproccessing_type.NUM_CHANNELS,
+        num_classes=preproccessing_type.NUM_CLASSES,
         use_keras_image_data_format=use_keras_image_data_format,
         dtype=dtype,
         drop_remainder=True)
   else:
     distribution_utils.undo_set_up_synthetic_data()
-    input_fn = imagenet_preprocessing.input_fn
+    input_fn = preproccessing_type.input_fn
 
   # When `enable_xla` is True, we always drop the remainder of the batches
   # in the dataset, as XLA-GPU doesn't support dynamic shapes.
@@ -144,7 +148,7 @@ def run(flags_obj):
       is_training=True,
       data_dir=flags_obj.data_dir,
       batch_size=flags_obj.batch_size,
-      parse_record_fn=imagenet_preprocessing.get_parse_record_fn(
+      parse_record_fn=preproccessing_type.get_parse_record_fn(
           use_keras_image_data_format=use_keras_image_data_format),
       datasets_num_private_threads=flags_obj.datasets_num_private_threads,
       dtype=dtype,
@@ -159,20 +163,20 @@ def run(flags_obj):
         is_training=False,
         data_dir=flags_obj.data_dir,
         batch_size=flags_obj.batch_size,
-        parse_record_fn=imagenet_preprocessing.get_parse_record_fn(
+        parse_record_fn=preproccessing_type.get_parse_record_fn(
             use_keras_image_data_format=use_keras_image_data_format),
         dtype=dtype,
         drop_remainder=drop_remainder)
 
   lr_schedule = common.PiecewiseConstantDecayWithWarmup(
       batch_size=flags_obj.batch_size,
-      epoch_size=imagenet_preprocessing.NUM_IMAGES['train'],
+      epoch_size=preproccessing_type.NUM_IMAGES['train'],
       warmup_epochs=common.LR_SCHEDULE[0][1],
       boundaries=list(p[1] for p in common.LR_SCHEDULE[1:]),
       multipliers=list(p[0] for p in common.LR_SCHEDULE),
       compute_lr_on_cpu=True)
   steps_per_epoch = (
-      imagenet_preprocessing.NUM_IMAGES['train'] // flags_obj.batch_size)
+      preproccessing_type.NUM_IMAGES['train'] // flags_obj.batch_size)
 
   with strategy_scope:
     if flags_obj.optimizer == 'resnet50_default':
@@ -199,17 +203,17 @@ def run(flags_obj):
     # TODO(hongkuny): Remove trivial model usage and move it to benchmark.
     if flags_obj.use_trivial_model:
       model = trivial_model.trivial_model(
-          imagenet_preprocessing.NUM_CLASSES)
+          preproccessing_type.NUM_CLASSES)
     elif flags_obj.model == 'resnet50_v1.5':
       resnet_model.change_keras_layer(flags_obj.use_tf_keras_layers)
       model = resnet_model.resnet50(
-          num_classes=imagenet_preprocessing.NUM_CLASSES)
+          num_classes=preproccessing_type.NUM_CLASSES)
     elif flags_obj.model == 'mobilenet':
       # TODO(kimjaehong): Remove layers attribute when minimum TF version
       # support 2.0 layers by default.
       model = tf.keras.applications.mobilenet.MobileNet(
           weights=None,
-          classes=imagenet_preprocessing.NUM_CLASSES,
+          classes=preproccessing_type.NUM_CLASSES,
           layers=tf.keras.layers)
     elif flags_obj.keras_application_models:
       model_kfn = keras_app_models.get(flags_obj.model, None)
@@ -217,7 +221,7 @@ def run(flags_obj):
         raise ValueError("No keras application model name %s" % flags_obj.model)
       model = model_kfn(
         weights=None,
-        classes=imagenet_preprocessing.NUM_CLASSES)
+        classes=preproccessing_type.NUM_CLASSES)
     if flags_obj.pretrained_filepath:
       model.load_weights(flags_obj.pretrained_filepath)
 
@@ -260,7 +264,7 @@ def run(flags_obj):
     train_epochs = 1
 
   num_eval_steps = (
-      imagenet_preprocessing.NUM_IMAGES['validation'] // flags_obj.batch_size)
+      preproccessing_type.NUM_IMAGES['validation'] // flags_obj.batch_size)
 
   validation_data = eval_input_dataset
   if flags_obj.skip_eval:
@@ -321,7 +325,8 @@ def define_imagenet_keras_flags():
   common.define_keras_flags(
       model=True,
       optimizer=True,
-      pretrained_filepath=True)
+      pretrained_filepath=True,
+      dataset=True)
   common.define_pruning_flags()
   flags_core.set_defaults()
   flags.adopt_module_key_flags(common)
