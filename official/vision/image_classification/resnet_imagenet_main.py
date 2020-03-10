@@ -123,6 +123,14 @@ def run(flags_obj):
 
   preproccessing_type = imagenet_preprocessing if flags_obj.dataset == "imagenet" else cifar_preprocessing
 
+  input_shape = (preproccessing_type.HEIGHT, preproccessing_type.WIDTH, \
+     preproccessing_type.NUM_CHANNELS)
+  
+  if use_keras_image_data_format:
+    if tf.keras.backend.image_data_format() == 'channels_first':
+        input_shape = (preproccessing_type.NUM_CHANNELS, preproccessing_type.HEIGHT, \
+           preproccessing_type.WIDTH)
+
   # pylint: disable=protected-access
   if flags_obj.use_synthetic_data:
     assert flags_obj.dataset == "imagenet", \
@@ -208,14 +216,14 @@ def run(flags_obj):
       resnet_model.change_keras_layer(flags_obj.use_tf_keras_layers)
       model = resnet_model.resnet50(
           num_classes=preproccessing_type.NUM_CLASSES,
-          input_size=(preproccessing_type.HEIGHT, preproccessing_type.WIDTH, preproccessing_type.NUM_CHANNELS))
+          input_shape=input_shape)
     elif flags_obj.model == 'mobilenet':
       # TODO(kimjaehong): Remove layers attribute when minimum TF version
       # support 2.0 layers by default.
       model = tf.keras.applications.mobilenet.MobileNet(
           weights=None,
           classes=preproccessing_type.NUM_CLASSES,
-          input_shape=(preproccessing_type.HEIGHT, preproccessing_type.WIDTH, preproccessing_type.NUM_CHANNELS),
+          input_shape=input_shape,
           layers=tf.keras.layers)
     elif flags_obj.keras_application_models:
       model_kfn = keras_app_models.get(flags_obj.model, None)
@@ -223,7 +231,7 @@ def run(flags_obj):
         raise ValueError("No keras application model name %s" % flags_obj.model)
       model = model_kfn(
         weights=None,
-        input_shape=(preproccessing_type.HEIGHT, preproccessing_type.WIDTH, preproccessing_type.NUM_CHANNELS),
+        input_shape=input_shape,
         classes=preproccessing_type.NUM_CLASSES)
     if flags_obj.pretrained_filepath:
       model.load_weights(flags_obj.pretrained_filepath)
