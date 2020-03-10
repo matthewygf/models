@@ -215,6 +215,7 @@ def run(flags_obj):
       model = tf.keras.applications.mobilenet.MobileNet(
           weights=None,
           classes=preproccessing_type.NUM_CLASSES,
+          input_shape=(preproccessing_type.HEIGHT, preproccessing_type.WIDTH, preproccessing_type.NUM_CHANNELS),
           layers=tf.keras.layers)
     elif flags_obj.keras_application_models:
       model_kfn = keras_app_models.get(flags_obj.model, None)
@@ -222,6 +223,7 @@ def run(flags_obj):
         raise ValueError("No keras application model name %s" % flags_obj.model)
       model = model_kfn(
         weights=None,
+        input_shape=(preproccessing_type.HEIGHT, preproccessing_type.WIDTH, preproccessing_type.NUM_CHANNELS),
         classes=preproccessing_type.NUM_CLASSES)
     if flags_obj.pretrained_filepath:
       model.load_weights(flags_obj.pretrained_filepath)
