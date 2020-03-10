@@ -83,21 +83,9 @@ def parse_record(raw_record, is_training, dtype):
   Returns:
     Tuple with processed image tensor and one-hot-encoded label tensor.
   """
-  # Convert bytes to a vector of uint8 that is record_bytes long.
-  record_vector = tf.io.decode_raw(raw_record, tf.uint8)
-
-  # The first byte represents the label, which we convert from uint8 to int32
-  # and then to one-hot.
-  label = tf.cast(record_vector[0], tf.int32)
-
-  # The remaining bytes after the label represent the image, which we reshape
-  # from [depth * height * width] to [depth, height, width].
-  depth_major = tf.reshape(record_vector[1:_RECORD_BYTES],
-                           [NUM_CHANNELS, HEIGHT, WIDTH])
-
-  # Convert from [depth, height, width] to [height, width, depth], and cast as
-  # float32.
-  image = tf.cast(tf.transpose(a=depth_major, perm=[1, 2, 0]), tf.float32)
+  image = raw_record['image']
+  label = raw_record['label']
+  label = tf.cast(label, tf.int32)
 
   image = preprocess_image(image, is_training)
   image = tf.cast(image, dtype)
@@ -167,27 +155,13 @@ def input_fn(is_training,
     A dataset that can be used for iteration.
   """
   cifar_builder = tfds.builder('cifar10', data_dir=data_dir)
-  if len(os.listdir(data_dir)) == 0:
+  if len([os.listdir(data_dir)]) == 0:
     cifar_builder.download_and_prepare()
 
   if is_training:
     ds = cifar_builder.as_dataset(split='train')
   else:
     ds = cifar_builder.as_dataset(split='test')
-
-  # Convert to individual records.
-  # cycle_length = 10 means that up to 10 files will be read and deserialized in
-  # parallel. You may want to increase this number if you have a large number of
-  # CPU cores.
-  ds = ds.interleave(
-      tf.data.TFRecordDataset,
-      cycle_length=10,
-      num_parallel_calls=tf.data.experimental.AUTOTUNE)
-
-  if is_training and training_dataset_cache:
-    # Improve training performance when training data is in remote storage and
-    # can fit into worker memory.
-    ds = ds.cache()
 
   return imagenet_preprocessing.process_record_dataset(
       dataset=ds,
