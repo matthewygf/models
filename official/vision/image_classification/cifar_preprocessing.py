@@ -145,7 +145,10 @@ def input_fn(is_training,
              datasets_num_private_threads=None,
              parse_record_fn=parse_record,
              input_context=None,
-             drop_remainder=False):
+             drop_remainder=False,
+             training_dataset_cache=False,
+             tf_data_experimental_slack=False,
+             filnames=None):
   """Input function which provides batches for train or eval.
 
   Args:
@@ -172,6 +175,20 @@ def input_fn(is_training,
   else:
     ds = cifar_builder.as_dataset(split='test')
 
+  # Convert to individual records.
+  # cycle_length = 10 means that up to 10 files will be read and deserialized in
+  # parallel. You may want to increase this number if you have a large number of
+  # CPU cores.
+  ds = ds.interleave(
+      tf.data.TFRecordDataset,
+      cycle_length=10,
+      num_parallel_calls=tf.data.experimental.AUTOTUNE)
+
+  if is_training and training_dataset_cache:
+    # Improve training performance when training data is in remote storage and
+    # can fit into worker memory.
+    ds = ds.cache()
+
   return imagenet_preprocessing.process_record_dataset(
       dataset=ds,
       is_training=is_training,
@@ -180,5 +197,6 @@ def input_fn(is_training,
       parse_record_fn=parse_record_fn,
       dtype=dtype,
       datasets_num_private_threads=datasets_num_private_threads,
-      drop_remainder=drop_remainder
+      drop_remainder=drop_remainder,
+      tf_data_experimental_slack=tf_data_experimental_slack
   )
