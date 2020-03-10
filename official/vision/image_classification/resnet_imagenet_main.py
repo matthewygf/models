@@ -207,7 +207,8 @@ def run(flags_obj):
     elif flags_obj.model == 'resnet50_v1.5':
       resnet_model.change_keras_layer(flags_obj.use_tf_keras_layers)
       model = resnet_model.resnet50(
-          num_classes=preproccessing_type.NUM_CLASSES)
+          num_classes=preproccessing_type.NUM_CLASSES,
+          input_size=(preproccessing_type.HEIGHT, preproccessing_type.WIDTH, preproccessing_type.NUM_CHANNELS))
     elif flags_obj.model == 'mobilenet':
       # TODO(kimjaehong): Remove layers attribute when minimum TF version
       # support 2.0 layers by default.

@@ -251,7 +251,8 @@ def conv_block(input_tensor,
 def resnet50(num_classes,
              batch_size=None,
              use_l2_regularizer=True,
-             rescale_inputs=False):
+             rescale_inputs=False,
+             input_size=(224,224,3)):
   """Instantiates the ResNet50 architecture.
 
   Args:
@@ -263,8 +264,7 @@ def resnet50(num_classes,
   Returns:
       A Keras model instance.
   """
-  input_shape = (224, 224, 3)
-  img_input = layers.Input(shape=input_shape, batch_size=batch_size)
+  img_input = layers.Input(shape=input_size, batch_size=batch_size)
   if rescale_inputs:
     # Hub image modules expect inputs in the range [0, 1]. This rescales these
     # inputs to the range expected by the trained model.
