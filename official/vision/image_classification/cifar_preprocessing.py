@@ -155,7 +155,7 @@ def input_fn(is_training,
     A dataset that can be used for iteration.
   """
   cifar_builder = tfds.builder('cifar10', data_dir=data_dir)
-  if len([os.listdir(data_dir)]) == 0:
+  if len(os.listdir(data_dir)) == 0:
     cifar_builder.download_and_prepare()
 
   if is_training:
